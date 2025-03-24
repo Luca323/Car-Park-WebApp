@@ -11,23 +11,27 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #007BFF; /* White background */
+    background-color: #007BFF; /* Blue background */
 }
 
-.login-container {
-    background: #007BFF; /* Blue box */
+/* Shared styles for login and dashboard containers */
+.container {
+    background: #0056b3; /* Darker blue box */
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
     width: 300px;
-    color: white; /* Make text readable */
+    color: white; /* White text for contrast */
 }
 
 h2 {
     margin-bottom: 20px;
+    color: white; /* Make "Car Park Login" white */
+    text-align: center; /* Center the text */
 }
 
+/* Input fields */
 input {
     width: 100%;
     padding: 10px;
@@ -36,16 +40,18 @@ input {
     border-radius: 5px;
 }
 
+/* Buttons */
 button {
-    background-color: #002366; /* Dark blue button */
+    background-color: #003366; /* Dark blue buttons */
     color: white;
     border: none;
     padding: 10px 15px;
     cursor: pointer;
     border-radius: 5px;
     width: 100%;
+    margin-top: 10px;
 }
 
 button:hover {
-    background-color: #001a4d; /* Slightly darker blue on hover */
+    background-color: #002244; /* Slightly darker blue on hover */
 }
