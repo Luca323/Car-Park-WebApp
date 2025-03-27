@@ -51,6 +51,7 @@ window.addEventListener("DOMContentLoaded", () => {
         defaultOption.textContent = "-- Select a Car Park --";
         defaultOption.disabled = true;
         defaultOption.selected = true;
+        defaultOption.value = "";
         carParkSelect.appendChild(defaultOption);
 
         carParks.forEach((park, index) => {
@@ -60,6 +61,7 @@ window.addEventListener("DOMContentLoaded", () => {
         carParkSelect.appendChild(option);
         });
     }
+    updateDropdown();
 
     addBtn.onclick = () => {
         const name = nameInput.value.trim();
