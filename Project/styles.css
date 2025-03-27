@@ -1,4 +1,4 @@
-/* Reset some default styles */
+/* Reset some styles */
 * {
     margin: 0;
     padding: 0;
@@ -7,51 +7,151 @@
 }
 
 body {
+    background-color: #007BFF;
+    min-height: 100vh;
+}
+
+/* Header */
+header {
+    background-color: #003366;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Login/Register Pages */
+.auth-page {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #007BFF; /* Blue background */
+    flex-direction: column;
 }
 
-/* Shared styles for login and dashboard containers */
 .container {
-    background: #0056b3; /* Darker blue box */
-    padding: 20px;
+    background: #0056b3;
+    padding: 30px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 300px;
-    color: white; /* White text for contrast */
+    width: 80%;
+    max-width: 700px;
+    color: white;
+    box-sizing: border-box;
 }
 
-h2 {
+.dashboard-style {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: 20px;
+}
+
+/* Hamburger Button */
+.menu-toggle {
+    background-color: #003366;
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 10px 20px;
+    cursor: pointer;
+    width: 100%;
+    display: none;
+    text-align: right;
+}
+
+/* Navigation */
+nav {
+    background-color: #0056b3;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+}
+
+nav a:hover {
+    background-color: #0066cc;
+    border-radius: 4px;
+}
+
+/* Dashboard Content */
+.dashboard {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: #333;
+}
+
+.section {
     margin-bottom: 20px;
-    color: white; /* Make "Car Park Login" white */
-    text-align: center; /* Center the text */
 }
 
-/* Input fields */
+.section h2 {
+    margin-top: 0;
+}
+
+/* Input Styling */
 input {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
+    border-radius: 5px;
+    display: block;
+    box-sizing: border-box;
     border: 1px solid #ccc;
-    border-radius: 5px;
 }
 
-/* Buttons */
-button {
-    background-color: #003366; /* Dark blue buttons */
+/* Button Styling */
+button,
+.btn {
+    background-color: #003366;
     color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
+    border: 5px;
     width: 100%;
+    padding: 10px 15px;
+    border-radius: 5px;
     margin-top: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
 }
 
-button:hover {
-    background-color: #002244; /* Slightly darker blue on hover */
+button:hover,
+.btn:hover {
+    background-color: #002244;
+}
+
+/* 🔽 Drop-down behavior on smaller screens */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    nav {
+        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 10px 20px;
+    }
+
+    nav.show {
+        display: flex;
+    }
+
+    nav a {
+        padding: 10px 0;
+        width: 100%;
+        border-top: 1px solid #004080;
+    }
 }
