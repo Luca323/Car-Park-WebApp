@@ -1,0 +1,59 @@
+USE parkease;
+CREATE TABLE logininfo
+(
+    UserID INTEGER PRIMARY KEY NOT NULL,
+    Username VARCHAR(50) NOT NULL,
+    Passkey VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Reservations(
+    ReservationID INTEGER PRIMARY KEY NOT NULL,
+    UserID INTEGER NOT NULL,
+    SpaceID INTEGER NOT NULL,
+    startDate DATE NOT NULL,
+    Arrival TIME NOT NULL,
+    Departure TIME NOT NULL,
+    FOREIGN KEY (SpaceID) REFERENCES Carpark(SpaceID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
+);
+
+CREATE TABLE Carpark (
+    SpaceID INT PRIMARY KEY NOT NULL,
+    Price INT NOT NULL,
+    Occupied BOOLEAN NOT NULL,
+    UserID INT,
+    FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
+);
+
+DELIMITER $$
+CREATE TRIGGER `check_userid_on_occupied_insert`
+BEFORE INSERT ON `Carpark`
+FOR EACH ROW
+BEGIN
+    IF NEW.Occupied = 1 AND NEW.UserID IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'UserID must be provided when space is occupied';
+    END IF;
+
+    IF NEW.Occupied = 0 AND NEW.UserID IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'UserID must be NULL when space is not occupied';
+    END IF;
+END$$
+
+CREATE TRIGGER `check_userid_on_occupied_update`
+BEFORE UPDATE ON `Carpark`
+FOR EACH ROW
+BEGIN
+    IF NEW.Occupied = 1 AND NEW.UserID IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'UserID must be provided when space is occupied';
+    END IF;
+
+    IF NEW.Occupied = 0 AND NEW.UserID IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'UserID must be NULL when space is not occupied';
+    END IF;
+END$$
+
+DELIMITER ;
