@@ -6,6 +6,6 @@ app.get('/',(req,res) => {
     res.send('Server Starting!')
 });
 
-app.listen((port, I) => {
+app.listen(port, () => {
     console.log(`Listening on port ${port}!`)
-})
+});
