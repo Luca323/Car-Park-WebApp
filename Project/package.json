@@ -9,5 +9,10 @@
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mysql": "^2.18.1",
+    "node": "^18.20.8"
+  }
 }
