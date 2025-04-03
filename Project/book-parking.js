@@ -1,0 +1,149 @@
+window.addEventListener("DOMContentLoaded", () => {
+    // Creating and appending the header and nav bar
+    const header = document.createElement("header");
+    header.innerHTML = `<h1>Book Parking</h1>`;
+    document.body.appendChild(header);
+  
+    const nav = document.createElement("nav");
+    nav.innerHTML = `
+      <a href="driver-dashboard.html">Dashboard</a>
+      <a href="book-parking.html">Book Parking</a>
+      <a href="contact-us.html">Contact Us</a>
+    `;
+    document.body.appendChild(nav);
+  
+    // Creating the main dashboard container
+    const container = document.createElement("div");
+    container.className = "dashboard";
+    document.body.appendChild(container);
+  
+    // Creating section for booking form
+    const section = document.createElement("div");
+    section.className = "section";
+    section.innerHTML = "<h2>Parking Booking</h2>";
+  
+    // Dropdown to select car park 
+    const carParkSelect = document.createElement("select");
+    carParkSelect.className = "event-input";
+    const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+    const defaultOption = document.createElement("option");
+    defaultOption.textContent = "Select a Car Park";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.value = "";
+    carParkSelect.appendChild(defaultOption);
+    carParks.forEach(park => {
+      const opt = document.createElement("option");
+      opt.value = park.name;
+      opt.textContent = park.name;
+      carParkSelect.appendChild(opt);
+    });
+  
+    // Inputs for start & end date/times 
+    const startDateInput = document.createElement("input");
+    startDateInput.type = "datetime-local";
+    startDateInput.className = "event-input";
+  
+    const endDateInput = document.createElement("input");
+    endDateInput.type = "datetime-local";
+    endDateInput.className = "event-input";
+  
+    const paymentInfo = document.createElement("div");
+    paymentInfo.id = "paymentInfo";
+  
+    // Button to submit booking request
+    const submitBtn = document.createElement("button");
+    submitBtn.textContent = "Submit Parking Request";
+  
+    // Adds all elements to the section
+    section.append(
+      carParkSelect,
+      startDateInput,
+      endDateInput,
+      paymentInfo,
+      submitBtn
+    );
+  
+    container.appendChild(section);
+  
+    // Calculations for cost based on time of stay
+    function calculateCost(startDate, endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+  
+      if (end <= start) {
+        return 0;
+      }
+  
+      const durationInHours = (end - start) / (1000 * 60 * 60); // milliseconds to hours
+      const cost = durationInHours * 2; // £2/hour
+      return cost.toFixed(2);
+    }
+  
+    // Logic for handling the submission of the parking request
+    submitBtn.onclick = () => {
+      const carPark = carParkSelect.value;
+      const startDate = startDateInput.value;
+      const endDate = endDateInput.value;
+  
+      // Validation of all fields
+      if (!carPark || !startDate || !endDate) {
+        alert("Please fill in all fields.");
+        return;
+      }
+  
+      const cost = calculateCost(startDate, endDate);
+      if (cost <= 0) {
+        alert("Invalid time range.");
+        return;
+      }
+  
+      // Simulation of payment step
+      const confirmPayment = confirm(`Simulated Payment: £${cost}\n\nClick OK to confirm payment.`);
+      if (!confirmPayment) {
+        alert("Payment cancelled. Request not submitted.");
+        return;
+      }
+  
+      // Creates new parking request object
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        carPark,
+        startDate,
+        endDate,
+        cost,
+        status: "pending"
+      };
+  
+      // Saves the new parking request to local storage (needs to be DB)
+      const parkingRequests = JSON.parse(localStorage.getItem("parkingRequests")) || [];
+      parkingRequests.push(newRequest);
+      localStorage.setItem("parkingRequests", JSON.stringify(parkingRequests));
+  
+      // Alerts user of successful payment
+      alert("✅ Payment successful! Your parking request has been submitted.");
+      
+      // Clears form values
+      startDateInput.value = "";
+      endDateInput.value = "";
+      carParkSelect.value = "";
+      paymentInfo.innerHTML = "";
+    };
+  
+    // Displays cost
+    function displayCost() {
+      const start = startDateInput.value;
+      const end = endDateInput.value;
+      if (start && end) {
+        const cost = calculateCost(start, end);
+        if (cost > 0) {
+          paymentInfo.innerHTML = `Cost: £${cost}`;
+        } else {
+          paymentInfo.innerHTML = "";
+        }
+      }
+    }
+  
+    startDateInput.addEventListener("change", displayCost);
+    endDateInput.addEventListener("change", displayCost);
+  });

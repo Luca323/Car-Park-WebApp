@@ -112,6 +112,10 @@ input {
     border: 1px solid #ccc;
 }
 
+.text-input {
+    width: 100%;
+}
+
 /* Button Styling */
 button,
 .btn {

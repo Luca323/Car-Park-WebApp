@@ -1,35 +1,158 @@
 window.addEventListener("DOMContentLoaded", () => {
-    const header = document.createElement("header");
-    header.innerHTML = `<h1>Manage Spaces</h1>`;
-    document.body.appendChild(header);
-    
-    const nav = document.createElement("nav");
-    nav.innerHTML = `
-      <a href="admin-dashboard.html">Dashboard</a>
-      <a href="manage-carparks.html">Manage Car Parks</a>
-      <a href="manage-spaces.html">Manage Spaces</a>
-      <a href="manage-events.html">Manage Events</a>
-      <a href="send-notif.html">Send Notifications</a>
-    `;
-    document.body.appendChild(nav);
+  // Creating and appending the header and nav bar
+  const header = document.createElement("header");
+  header.innerHTML = `<h1>Manage Spaces</h1>`;
+  document.body.appendChild(header);
   
-    const container = document.createElement("div");
-    container.className = "dashboard";
+  const nav = document.createElement("nav");
+  nav.innerHTML = `
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="manage-carparks.html">Manage Car Parks</a>
+    <a href="manage-spaces.html">Manage Spaces</a>
+    <a href="manage-events.html">Manage Events</a>
+    <a href="send-notif.html">Send Notifications</a>
+  `;
+  document.body.appendChild(nav);
+
+  // Creating main container & section
+  const container = document.createElement("div");
+  container.className = "dashboard";
+
+  const section = document.createElement("div");
+  section.className = "section";
+  section.innerHTML = `<h2>Block or Unblock Spaces</h2>`;
+
+  // Dropdown for selecting car park
+  const carParkSelect = document.createElement("select");
+  carParkSelect.className = "dropdown";
+  const defaultOption = document.createElement("option");
+  defaultOption.textContent = "Select a Car Park";
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  defaultOption.value = "";
+  carParkSelect.appendChild(defaultOption);
+  section.appendChild(carParkSelect);
   
-    const section = document.createElement("div");
-    section.className = "section";
-    section.innerHTML = `<h2>Block or Unblock Spaces</h2>`;
-  
-    const blockBtn = document.createElement("button");
-    blockBtn.className = "btn";
-    blockBtn.textContent = "Block Space";
-  
-    const unblockBtn = document.createElement("button");
-    unblockBtn.className = "btn";
-    unblockBtn.textContent = "Unblock Space";
-  
-    section.append(blockBtn, unblockBtn);
-    container.appendChild(section);
-    document.body.appendChild(container);
+  // Dropdown to filter by space status
+  const filterSelect = document.createElement("select");
+  filterSelect.className = "dropdown";
+  ["All", "Available", "Blocked", "Reserved"].forEach(status => {
+    const opt = document.createElement("option");
+    opt.value = status.toLowerCase();
+    opt.textContent = status;
+    filterSelect.appendChild(opt);
   });
-  
+  section.appendChild(document.createTextNode(" Filter by status: "));
+  section.appendChild(filterSelect);
+
+  // Input field to search by Space ID
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Search by Space ID";
+  section.appendChild(searchInput);
+
+  // Input field for reason for blocking space
+  const reasonInput = document.createElement("input");
+  reasonInput.type = "text";
+  reasonInput.placeholder = "Reason for blocking (optional)";
+  section.appendChild(reasonInput);
+
+  // List element to show filtered spaces
+  const spaceList = document.createElement("ul");
+  spaceList.className = "space-list";
+  section.appendChild(spaceList);
+
+  // Appends section & container to body
+  container.appendChild(section);
+  document.body.appendChild(container);
+
+  // Loads car parks & spaces from local storage (needs to be DB)
+  const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+  let allSpaces = JSON.parse(localStorage.getItem("spaces")) || [];
+
+  // Adds available car parks to the car park dropdown
+  carParks.forEach(park => {
+    const option = document.createElement("option");
+    option.value = park.name;
+    option.textContent = park.name;
+    carParkSelect.appendChild(option);
+  });
+
+  // Function to render space list based on selected car park & filters
+  function renderSpaces(carParkName, filterStatus = "all") {
+    spaceList.innerHTML = "";
+    let spaces = allSpaces.filter(s => s.carPark === carParkName);
+
+    // Filter by status
+    if (filterStatus !== "all") {
+      spaces = spaces.filter(s => s.status === filterStatus);
+    }
+
+    // Filter by search input
+    const searchText = searchInput.value.trim().toLowerCase();
+    if (searchText !== "") {
+      spaces = spaces.filter(s => s.id.toLowerCase().includes(searchText));
+    }
+
+    // No match with filters
+    if (spaces.length === 0) {
+      spaceList.innerHTML = `<li>No spaces match these filters.</li>`;
+      return;
+    }
+
+    // Creates list items for each filtered space
+    spaces.forEach(space => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>${space.id}</strong> — ${space.status.toUpperCase()}
+        ${space.status === "blocked" && space.reason ? `(Reason: ${space.reason})` : ""}
+        <br/>
+      `;
+
+      // Buttons to block/unblock the space
+      const blockBtn = document.createElement("button");
+      blockBtn.textContent = "Block";
+      blockBtn.onclick = () => {
+        space.status = "blocked";
+        space.reason = reasonInput.value.trim() || "unspecified";
+        updateStorageAndRerender();
+      };
+
+      const unblockBtn = document.createElement("button");
+      unblockBtn.textContent = "Unblock";
+      unblockBtn.onclick = () => {
+        space.status = "available";
+        delete space.reason;
+        updateStorageAndRerender();
+      };
+
+      li.appendChild(blockBtn);
+      li.appendChild(unblockBtn);
+      spaceList.appendChild(li);
+    });
+  }
+
+  // Saves updates spaces to local storage and refreshes space list (needs to be db)
+  function updateStorageAndRerender() {
+    localStorage.setItem("spaces", JSON.stringify(allSpaces));
+    renderSpaces(carParkSelect.value, filterSelect.value);
+    reasonInput.value = "";
+  }
+
+  // Event listeners for dropdowns & search input
+  carParkSelect.onchange = () => {
+    renderSpaces(carParkSelect.value, filterSelect.value);
+  };
+
+  filterSelect.onchange = () => {
+    if (carParkSelect.value) {
+      renderSpaces(carParkSelect.value, filterSelect.value);
+    }
+  };
+
+  searchInput.oninput = () => {
+    if (carParkSelect.value) {
+      renderSpaces(carParkSelect.value, filterSelect.value);
+    }
+  };
+});
