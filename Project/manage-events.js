@@ -1,5 +1,6 @@
 window.addEventListener("DOMContentLoaded", () => {
   // Creating and appending the header and nav bar
+  //save
   const header = document.createElement("header");
   header.innerHTML = `<h1>Manage Events</h1>`;
   document.body.appendChild(header);
