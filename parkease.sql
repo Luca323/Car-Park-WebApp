@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 28, 2025 at 02:57 PM
+-- Generation Time: Apr 28, 2025 at 03:15 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -78,15 +78,16 @@ CREATE TABLE `logininfo` (
   `CarNum` varchar(10) NOT NULL,
   `Email` varchar(30) NOT NULL,
   `Passkey` varchar(100) NOT NULL,
-  `PhoneNum` varchar(15) DEFAULT NULL
+  `PhoneNum` varchar(15) DEFAULT NULL,
+  `Type` enum('driver','admin') NOT NULL DEFAULT 'driver'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `logininfo`
 --
 
-INSERT INTO `logininfo` (`UserID`, `Username`, `CarNum`, `Email`, `Passkey`, `PhoneNum`) VALUES
-(0, 'Luca Harper-Daude', 'ABCDE', 'luca-hdaude@hotmail.com', 'Balls', '07519990754');
+INSERT INTO `logininfo` (`UserID`, `Username`, `CarNum`, `Email`, `Passkey`, `PhoneNum`, `Type`) VALUES
+(0, 'Luca Harper-Daude', 'ABCDE', 'luca-hdaude@hotmail.com', 'Balls', '07519990754', 'driver');
 
 -- --------------------------------------------------------
 
