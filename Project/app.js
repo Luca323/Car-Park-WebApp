@@ -20,14 +20,14 @@ app.listen(port, () => {
 
 //Registration endpoint
 app.post('/register', (req, res) => {
-    const { username, passkey } = req.body;
+    const { username, passkey, phone, email, regNum } = req.body;
 
     if (!username || !passkey) {
-        return res.status(400).json({ error: 'Username and password are required' });
+        return res.status(400).json({ error: 'Username and password are required' }); //Checking fields aren't empty
     }
 
-    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
-    connection.query(checkQuery, [username], (err, results) => {
+    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?'; //Ensures User dosen't exist with same email
+    connection.query(checkQuery, [email], (err, results) => {
         if (err) {
             console.error('Check user error:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -37,8 +37,8 @@ app.post('/register', (req, res) => {
             return res.status(409).json({ error: 'User already exists' });
         }
 
-        const insertQuery = 'INSERT INTO logininfo (Username, Passkey) VALUES (?, ?)';
-        connection.query(insertQuery, [username, passkey], (err, result) => {
+        const insertQuery = 'INSERT INTO logininfo (Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?)'; //Creates User in 'login info' table
+        connection.query(insertQuery, [username, passkey, phone, email, regNum], (err, result) => {
             if (err) {
                 console.error('Insert user error:', err);
                 return res.status(500).json({ error: 'Database insert failed' });

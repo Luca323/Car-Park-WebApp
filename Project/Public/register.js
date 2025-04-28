@@ -44,7 +44,7 @@ window.addEventListener("DOMContentLoaded", () => {
   
     // Append inputs to the form
     form.append(nameInput, regInput, contactInput, emailInput, passInput, submitBtn);
-    container.append(heading, form);
+    container.append(heading, form);//
     document.body.appendChild(container);
   
     // Handles form submit logic
@@ -52,8 +52,12 @@ window.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
 
       const newUser = {
-        username: emailInput.value.trim().toLowerCase(), // mapping emailInput to username
-        passkey: passInput.value.trim()
+        username: nameInput.value.trim(), // mapping nameInput to username
+        passkey: passInput.value.trim(),
+        phone: contactInput.value.trim(),
+        email: emailInput.value.trim().toLowerCase(),
+        regNum: regInput.value.trim()
+
       };
 
       try {
