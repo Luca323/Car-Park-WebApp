@@ -57,7 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
-        const response = fetch('http://localhost:8080/register', {
+        const response = fetch('http://localhost:8080/register.html', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
