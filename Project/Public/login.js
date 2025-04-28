@@ -12,12 +12,6 @@ window.addEventListener("DOMContentLoaded", () => {
     // Creating the login form
     const form = document.createElement("form");
 
-    // Handles form submission (needs to be updated to direct to different dashboards depending on admin/driver)
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        location.href = "dashboard.html";
-    };
-
     // Creating input fields for form
     const usernameInput = document.createElement("input");
     usernameInput.type = "text";
@@ -44,6 +38,32 @@ window.addEventListener("DOMContentLoaded", () => {
     form.append(usernameInput, passwordInput, submitBtn, registerBtn);
     container.append(heading, form);
     document.body.appendChild(container);
+
+    // Handles form submission (needs to be updated to direct to different dashboards depending on admin/driver)
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        location.href = "dashboard.html";
+
+        const chkUser = {
+            username: usernameInput.value.trim(),
+            password: passwordInput.value.trim()
+        }
+
+        try{
+            const response = await fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                  },
+                body: JSON.stringify(chkUser)
+            })
+
+            const data = await response.json()
+
+        }catch(err){
+            alert("LOGIN ERROR!")
+        }
+    };
 
 });
 
