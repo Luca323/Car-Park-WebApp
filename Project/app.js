@@ -26,8 +26,8 @@ app.post('/register', (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' }); //Checking fields aren't empty
     }
 
-    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?'; //Ensures User dosen't exist with same email
-    connection.query(checkQuery, [email], (err, results) => {
+    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?'; //Ensures User dosen't exist with same details
+    connection.query(checkQuery, [username], (err, results) => {
         if (err) {
             console.error('Check user error:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -49,3 +49,34 @@ app.post('/register', (req, res) => {
     });
 });
 
+app.post("/login", (req, res) => {
+    const { username, passkey } = req.body;
+
+    if (!username || !passkey) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const compare = 'SELECT Passkey FROM logininfo WHERE Username = ?';
+    connection.query(compare, [username], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(401).json({ error: 'Incorrect username or password' });
+        }
+
+        if (results.length > 1) {
+            return res.status(409).json({ error: 'Logic error: duplicate usernames' });
+        }
+
+        const storedPasskey = results[0].Passkey;
+
+        if (passkey === storedPasskey) {
+            return res.status(200).json({ message: 'Login successful' });
+        } else {
+            return res.status(401).json({ error: 'Incorrect username or password' });
+        }
+    });
+});

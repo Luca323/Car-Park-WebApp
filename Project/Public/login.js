@@ -42,26 +42,32 @@ window.addEventListener("DOMContentLoaded", () => {
     // Handles form submission (needs to be updated to direct to different dashboards depending on admin/driver)
     form.onsubmit = async (e) => {
         e.preventDefault();
-        location.href = "dashboard.html";
-
+    
         const chkUser = {
             username: usernameInput.value.trim(),
-            password: passwordInput.value.trim()
-        }
-
-        try{
+            passkey: passwordInput.value.trim() // Must match "passkey" expected by backend
+        };
+    
+        try {
             const response = await fetch('http://localhost:8080/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                  },
+                },
                 body: JSON.stringify(chkUser)
-            })
-
-            const data = await response.json()
-
-        }catch(err){
-            alert("LOGIN ERROR!")
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                alert('Logged in successfully!');
+                location.href = "driver-dashboard.html";
+            } else {
+                alert(data.error || "Incorrect Login Details!");
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            alert("Login Error!");
         }
     };
 
