@@ -35,8 +35,16 @@ window.addEventListener("DOMContentLoaded", () => {
     submitBtn.type = "submit";
     submitBtn.textContent = "Login";
 
+    const registerBtn = document.createElement("a");
+    registerBtn.href = "register.html";
+    registerBtn.textContent = "Click here to register for an account!";
+
+    
     // Appending
-    form.append(usernameInput, passwordInput, submitBtn);
+    form.append(usernameInput, passwordInput, submitBtn, registerBtn);
     container.append(heading, form);
     document.body.appendChild(container);
+
 });
+
+
