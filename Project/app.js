@@ -1,12 +1,24 @@
 const express = require('express');
 const connection = require('./db'); //Importing the connection
+const path = require('path');
 
 const app = express();
 const port = 8080;
 
 app.use(express.json());
 
-// Registration endpoint
+//Serve login page
+app.use(express.static(path.join(__dirname, 'Public')));
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, 'Public', 'login.html'));
+});
+
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+});
+
+//Registration endpoint
 app.post('/register', (req, res) => {
     const { username, passkey } = req.body;
 
@@ -22,7 +34,7 @@ app.post('/register', (req, res) => {
         }
 
         if (results.length > 0) {
-            return res.status(409).json({ error: 'Username already exists' });
+            return res.status(409).json({ error: 'User already exists' });
         }
 
         const insertQuery = 'INSERT INTO logininfo (Username, Passkey) VALUES (?, ?)';
@@ -37,11 +49,3 @@ app.post('/register', (req, res) => {
     });
 });
 
-// Optional: simple test route
-app.get('/', (req, res) => {
-    res.send('Server is running!');
-});
-
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});

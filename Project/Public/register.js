@@ -51,31 +51,31 @@ window.addEventListener("DOMContentLoaded", () => {
     form.onsubmit = (e) => {
       e.preventDefault();
 
-  const newUser = {
-    username: emailInput.value.trim().toLowerCase(), // mapping emailInput to username
-    passkey: passInput.value.trim()
-  };
+      const newUser = {
+        username: emailInput.value.trim().toLowerCase(), // mapping emailInput to username
+        passkey: passInput.value.trim()
+      };
 
-  try {
-    const response = fetch('http://localhost:8080/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newUser)
-    });
+      try {
+        const response = fetch('http://localhost:8080/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newUser)
+        });
 
-    const data = response.json();
+        const data = response.json();
 
-    if (response.ok) {
-      alert('Registration successful! You can now log in.');
-      location.href = 'login.html';
-    } else {
-      alert(data.error || 'Registration failed');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('An error occurred while trying to register.');
-  }
-};
+        if (response.ok) {
+          alert('Registration successful! You can now log in.');
+          location.href = 'login.html';
+        } else {
+          alert(data.error || 'Registration failed');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while trying to register.');
+      }
+    };
   });
