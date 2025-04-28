@@ -48,7 +48,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(container);
   
     // Handles form submit logic
-    form.onsubmit = (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
 
       const newUser = {
@@ -57,7 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
-        const response = fetch('http://localhost:8080/register.html', {
+        const response = await fetch('http://localhost:8080/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ window.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(newUser)
         });
 
-        const data = response.json();
+        const data = await response.json();
 
         if (response.ok) {
           alert('Registration successful! You can now log in.');
