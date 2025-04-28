@@ -19,7 +19,7 @@ app.listen(port, () => {
 });
 
 //Registration endpoint
-app.post('/register.html', (req, res) => {
+app.post('/register', (req, res) => {
     const { username, passkey } = req.body;
 
     if (!username || !passkey) {
