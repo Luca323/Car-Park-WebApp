@@ -88,3 +88,48 @@ app.post("/login", (req, res) => {
         }
     });
 });
+
+app.get('/api/spaces', (req, res) => {
+    const query = 'SELECT * FROM Spaces';
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Failed to fetch spaces:', err);
+            return res.status(500).json({ error: 'Failed to fetch spaces' });
+        }
+        res.json(results);
+    });
+});
+
+app.post('/api/spaces/update', (req, res) => {
+    const spaces = req.body;
+
+    if (!Array.isArray(spaces)) {
+        return res.status(400).json({ error: 'Invalid data format. Expected an array.' });
+    }
+
+    const queries = spaces.map(space => {
+        return new Promise((resolve, reject) => {
+            const { SpaceID, CarparkID, Price, Occupied, UserID } = space;
+
+            const query = `
+                UPDATE Spaces SET 
+                    CarparkID = ?, 
+                    Price = ?, 
+                    Occupied = ?, 
+                    UserID = ?
+                WHERE SpaceID = ?`;
+
+            connection.query(query, [CarparkID, Price, Occupied, UserID, SpaceID], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+    });
+
+    Promise.all(queries)
+        .then(() => res.status(200).json({ message: 'Spaces updated successfully' }))
+        .catch(err => {
+            console.error('Error updating spaces:', err);
+            res.status(500).json({ error: 'Database update failed' });
+        });
+});

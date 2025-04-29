@@ -3,7 +3,10 @@ CREATE TABLE logininfo
 (
     UserID INTEGER PRIMARY KEY NOT NULL,
     Username VARCHAR(50) NOT NULL,
-    Passkey VARCHAR(100) NOT NULL
+    Passkey VARCHAR(100) NOT NULL,
+    Email Varchar(30) NOT NULL,
+    PhoneNum VARCHAR(15) NOT NULL,
+    Type ENUM('driver', 'admin') NOT NULL DEFAULT 'driver'
 );
 
 CREATE TABLE Reservations(
@@ -15,6 +18,12 @@ CREATE TABLE Reservations(
     Departure TIME NOT NULL,
     FOREIGN KEY (SpaceID) REFERENCES Carpark(SpaceID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
+);
+
+CREATE TABLE Carparks (
+     CarparkID INT PRIMARY KEY NOT NULL,
+     Name VARCHAR(20),
+     Size INT
 );
 
 CREATE TABLE Spaces (

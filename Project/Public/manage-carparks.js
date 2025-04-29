@@ -60,13 +60,37 @@ window.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(container);
   
     // Loads car parks from local storage (needs to be DB)
-    let carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+    let carParks = [];
+
+  fetch('http://localhost:8080/api/spaces')
+      .then(res => res.json())
+      .then(data => {
+          carParks = data;
+          renderCarParks(); // Or whatever function you're using
+      })
+      .catch(err => console.error('Error loading car parks:', err));
+      
     let editingIndex = null;
   
-    // Function to save updated car parks to local storage (needs to be db)
-    function saveCarParks() {
-      localStorage.setItem("carParks", JSON.stringify(carParks));
-    }
+    async function saveCarParks() { //DB adaptation of function
+      try {
+          const response = await fetch('http://localhost:8080/api/spaces/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(carParks)
+          });
+  
+          const result = await response.json();
+  
+          if (response.ok) {
+              console.log('Car parks saved to DB.');
+          } else {
+              console.error('Failed to save car parks:', result.error);
+          }
+      } catch (err) {
+          console.error('Network error saving car parks:', err);
+      }
+  }
   
     // Function ot save updates spaces to local storage (needs to be db)
     function saveSpaces(spaces) {
