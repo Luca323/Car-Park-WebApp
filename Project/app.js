@@ -18,6 +18,10 @@ app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
 
+function getRandomInt(max) { //Simple rng algorithm for ID generation
+    return Math.floor(Math.random() * max);
+  }
+
 //Registration endpoint
 app.post('/register', (req, res) => {
     const { username, passkey, phone, email, regNum } = req.body;
@@ -37,8 +41,10 @@ app.post('/register', (req, res) => {
             return res.status(409).json({ error: 'User already exists' });
         }
 
-        const insertQuery = 'INSERT INTO logininfo (Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?)'; //Creates User in 'login info' table
-        connection.query(insertQuery, [username, passkey, phone, email, regNum], (err, result) => {
+        const genID = getRandomInt(9999) //Generates random int
+
+        const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)'; //Creates User in 'login info' table
+        connection.query(insertQuery, [genID,username, passkey, phone, email, regNum], (err, result) => {
             if (err) {
                 console.error('Insert user error:', err);
                 return res.status(500).json({ error: 'Database insert failed' });
@@ -49,6 +55,7 @@ app.post('/register', (req, res) => {
     });
 });
 
+//Log-In Endpoint
 app.post("/login", (req, res) => {
     const { username, passkey } = req.body;
 
@@ -56,7 +63,7 @@ app.post("/login", (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const compare = 'SELECT Passkey FROM logininfo WHERE Username = ?';
+    const compare = 'SELECT Passkey, Type FROM logininfo WHERE Username = ?';
     connection.query(compare, [username], (err, results) => {
         if (err) {
             console.error(err);
@@ -72,9 +79,10 @@ app.post("/login", (req, res) => {
         }
 
         const storedPasskey = results[0].Passkey;
+        const accType = results[0].Type;
 
         if (passkey === storedPasskey) {
-            return res.status(200).json({ message: 'Login successful' });
+            return res.status(200).json({ message: 'Login successful', Type: accType });
         } else {
             return res.status(401).json({ error: 'Incorrect username or password' });
         }

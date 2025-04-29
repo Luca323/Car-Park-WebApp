@@ -61,8 +61,14 @@ window.addEventListener("DOMContentLoaded", () => {
     
             if (response.ok) {
                 alert('Logged in successfully!');
-                location.href = "driver-dashboard.html";
+                if(data.Type == 'driver'){
+                    location.href = "driver-dashboard.html";
+                }
+                else if(data.Type == 'admin'){
+                    location.href = "admin-dashboard.html";
+                }
             } else {
+                console.log(data.error)
                 alert(data.error || "Incorrect Login Details!");
             }
         } catch (err) {
