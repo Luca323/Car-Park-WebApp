@@ -17,17 +17,20 @@ CREATE TABLE Reservations(
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
 );
 
-CREATE TABLE Carpark (
+CREATE TABLE Spaces (
     SpaceID INT PRIMARY KEY NOT NULL,
+    CarparkID INT NOT NULL,
     Price INT NOT NULL,
     Occupied BOOLEAN NOT NULL,
     UserID INT,
+    FOREIGN KEY (CarparkID) REFERENCES Carparks(CarparkID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
 );
 
 DELIMITER $$
+
 CREATE TRIGGER `check_userid_on_occupied_insert`
-BEFORE INSERT ON `Carpark`
+BEFORE INSERT ON `Spaces`
 FOR EACH ROW
 BEGIN
     IF NEW.Occupied = 1 AND NEW.UserID IS NULL THEN
@@ -42,7 +45,7 @@ BEGIN
 END$$
 
 CREATE TRIGGER `check_userid_on_occupied_update`
-BEFORE UPDATE ON `Carpark`
+BEFORE UPDATE ON `Spaces`
 FOR EACH ROW
 BEGIN
     IF NEW.Occupied = 1 AND NEW.UserID IS NULL THEN
