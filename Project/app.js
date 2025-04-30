@@ -89,19 +89,19 @@ app.post("/login", (req, res) => {
     });
 });
 
-//============================ Manage Carpark =================================================
+//============================ Admin Dashboard ===============================================
 
 app.get('/api/spaces', (req, res) => {
     const query = 'SELECT * FROM Spaces';
     connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Error fetching spaces:', err);
-            return res.status(500).json({ error: 'Failed to fetch spaces' });
-        }
-        res.json(results);
+      if (err) return res.status(500).json({ 
+        error: 'Failed to fetch spaces' 
+        });
+      res.json(results);
     });
-});
+  });
 
+//============================ Manage Carpark =================================================
 
 app.post('/api/spaces', (req, res) => {
     const { CarparkID, Price, Occupied, UserID } = req.body;

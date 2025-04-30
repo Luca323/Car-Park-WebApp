@@ -37,22 +37,40 @@ window.addEventListener("DOMContentLoaded", () => {
   container.appendChild(spaceListSection);
 
   // Function that gets the current parking space stats (from localstorage - will be DB tho)
-  function getStats() {
-    const spaces = JSON.parse(localStorage.getItem("spaces")) || [];
-
-    let total = spaces.length;
-    let available = spaces.filter(s => s.status === "available").length;
-    let blocked = spaces.filter(s => s.status === "blocked").length;
-    let reserved = spaces.filter(s => s.status === "reserved").length;
-    let occupied = spaces.filter(s => s.status === "occupied").length;
-
-    return { total, available, blocked, reserved, occupied, spaces };
+  async function getStats() {
+    try {
+      const res = await fetch('http://localhost:8080/api/spaces');
+  
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+  
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+  
+      const spaces = await res.json();
+      console.log("Fetched spaces:", spaces);
+  
+      const total = spaces.length;
+      const available = spaces.filter(s => !s.Occupied && s.UserID === null).length;
+      const occupied = spaces.filter(s => s.Occupied && s.UserID !== null).length;
+  
+      const reserved = 0;
+      const blocked = 0;
+  
+      return { total, available, blocked, reserved, occupied, spaces };
+    } catch (err) {
+      console.error("getStats() error:", err);
+      return { total: 0, available: 0, blocked: 0, reserved: 0, occupied: 0, spaces: [] };
+    }
   }
 
   // Function to update the dashboard summary & breakdown info
-  function updateDashboard() {
-    const { total, available, blocked, reserved, occupied, spaces } = getStats();
-
+  async function updateDashboard() {
+    const { total, available, blocked, reserved, occupied, spaces } = await getStats();
+  
     summarySection.innerHTML = `
       <h2>Space Summary</h2>
       <ul>
@@ -63,32 +81,43 @@ window.addEventListener("DOMContentLoaded", () => {
         <li><strong>Occupied:</strong> ${occupied}</li>
       </ul>
     `;
-
-
-    // Info for the breakdown by car park
+  
+    // Group spaces by CarparkID
     const byCarPark = {};
+  
     spaces.forEach(space => {
-      if (!byCarPark[space.carPark]) {
-        byCarPark[space.carPark] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
+      const carparkId = space.CarparkID;
+  
+      if (!byCarPark[carparkId]) {
+        byCarPark[carparkId] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
       }
-      byCarPark[space.carPark][space.status] = (byCarPark[space.carPark][space.status] || 0) + 1;
+  
+      // Determine status
+      let status = "available";
+      if (space.Occupied && space.UserID !== null) {
+        status = "occupied";
+      }
+  
+      // Add to breakdown
+      byCarPark[carparkId][status]++;
     });
-
+  
+    // Display breakdown
     breakdownSection.innerHTML = `<h2>Car Park Breakdown</h2>`;
     const ul = document.createElement("ul");
-
-    for (const [name, stats] of Object.entries(byCarPark)) {
+  
+    for (const [id, stats] of Object.entries(byCarPark)) {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${name}</strong> — 
-        ${stats.available} available, 
-        ${stats.blocked} blocked, 
-        ${stats.reserved} reserved, 
+        <strong>Carpark ID ${id}</strong> —
+        ${stats.available} available,
+        ${stats.blocked} blocked,
+        ${stats.reserved} reserved,
         ${stats.occupied} occupied
       `;
       ul.appendChild(li);
     }
-
+  
     breakdownSection.appendChild(ul);
   }
 
