@@ -113,73 +113,72 @@ window.addEventListener("DOMContentLoaded", () => {
     addBtn.onclick = async () => {
       const name = nameInput.value.trim();
       const size = parseInt(spaceInput.value.trim(), 10);
-
-      if (!name || isNaN(size) || size <= 0) {
-        alert("Please enter a valid name and number of spaces.");
-        return;
-      }
-
-      const body = { name, size };
-
-      try {
-        const res = await fetch('http://localhost:8080/api/carparks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          alert("Car park added successfully");
-          carParks.push({ CarparkID: data.CarparkID, Name: name, Size: size });
-          updateDropdown();
-          nameInput.value = '';
-          spaceInput.value = '';
-        } else {
-          alert(data.error || "Failed to add car park");
-        }
-      } catch (err) {
-        console.error('Add error:', err);
-      }
-    };
-  
-    //Edit button frontend functionality
-    editBtn.onclick = async () => {
-      const selectedIndex = carParkSelect.value;
-      if (selectedIndex === "") return;
-    
-      const selected = carParks[selectedIndex];
-      const name = nameInput.value.trim();
-      const size = parseInt(spaceInput.value.trim(), 10);
     
       if (!name || isNaN(size) || size <= 0) {
         alert("Invalid input");
         return;
       }
     
-      try {
-        const res = await fetch(`http://localhost:8080/api/carparks/${selected.CarparkID}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, size })
-        });
+      if (editingIndex !== null) {
+        // We're updating an existing car park
+        const selected = carParks[editingIndex];
     
-        if (res.ok) {
-          carParks[selectedIndex].Name = name;
-          carParks[selectedIndex].Size = size;
-          updateDropdown();
-          nameInput.value = '';
-          spaceInput.value = '';
-          editingIndex = null;
-          alert("Car park updated");
-        } else {
-          const data = await res.json();
-          alert(data.error || "Update failed");
+        try {
+          const res = await fetch(`http://localhost:8080/api/carparks/${selected.CarparkID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, size })
+          });
+    
+          if (res.ok) {
+            carParks[editingIndex].Name = name;
+            carParks[editingIndex].Size = size;
+            alert("Car park updated");
+          } else {
+            const data = await res.json();
+            alert(data.error || "Update failed");
+          }
+        } catch (err) {
+          console.error("Update error:", err);
         }
-      } catch (err) {
-        console.error('Update error:', err);
+    
+        editingIndex = null;
+      } else {
+        // We're adding a new car park
+        try {
+          const res = await fetch('http://localhost:8080/api/carparks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, size })
+          });
+    
+          const data = await res.json();
+    
+          if (res.ok) {
+            carParks.push({ CarparkID: data.CarparkID, Name: name, Size: size });
+            alert("Car park added");
+          } else {
+            alert(data.error || "Add failed");
+          }
+        } catch (err) {
+          console.error("Add error:", err);
+        }
       }
+    
+      nameInput.value = '';
+      spaceInput.value = '';
+      updateDropdown();
+    };
+  
+    //Edit button frontend functionality
+    editBtn.onclick = () => {
+      const selectedIndex = carParkSelect.value;
+      if (selectedIndex === "") return;
+    
+      const selected = carParks[selectedIndex];
+      nameInput.value = selected.Name; // case-sensitive: match DB column
+      spaceInput.value = selected.Size;
+      editingIndex = selectedIndex;
     };
   
     // Deletes selected car park & removes associated spaces

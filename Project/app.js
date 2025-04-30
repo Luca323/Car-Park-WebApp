@@ -124,23 +124,28 @@ app.post('/api/spaces', (req, res) => {
     });
 });
 
-app.put('/api/spaces/:id', (req, res) => {
+app.put('/api/carparks/:id', (req, res) => {
+    const { name, size } = req.body;
     const { id } = req.params;
-    const { CarparkID, Price, Occupied, UserID } = req.body;
-
-    const query = `
-        UPDATE Spaces SET CarparkID = ?, Price = ?, Occupied = ?, UserID = ?
-        WHERE SpaceID = ?`;
-
-    connection.query(query, [CarparkID, Price, Occupied, UserID || null, id], (err) => {
-        if (err) {
-            console.error('Error updating space:', err);
-            return res.status(500).json({ error: 'Failed to update space' });
-        }
-
-        res.json({ message: 'Space updated' });
+  
+    if (!name || size == null) {
+      return res.status(400).json({ error: 'Name and size are required' });
+    }
+  
+    const query = 'UPDATE Carparks SET Name = ?, Size = ? WHERE CarparkID = ?';
+    connection.query(query, [name, size, id], (err, result) => {
+      if (err) {
+        console.error('DB error:', err);
+        return res.status(500).json({ error: 'Failed to update car park' });
+      }
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Car park not found' });
+      }
+  
+      res.json({ message: 'Car park updated' });
     });
-});
+  });
 
 app.delete('/api/spaces/:id', (req, res) => {
     const { id } = req.params;
@@ -157,17 +162,17 @@ app.delete('/api/spaces/:id', (req, res) => {
 });
 
 app.get('/api/carparks', (req, res) => {
-    const query = 'SELECT CarparkID, Name, Size FROM Carparks';
-  
-    connection.query(query, (err, results) => {
-      if (err) {
-        console.error('Error retrieving car parks:', err);
-        return res.status(500).json({ error: 'Failed to retrieve car parks' });
-      }
-  
-      res.json(results);
-    });
+  const query = 'SELECT CarparkID, Name, Size FROM Carparks';
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error retrieving car parks:', err);
+      return res.status(500).json({ error: 'Failed to retrieve car parks' });
+    }
+
+    res.json(results);
   });
+});
 
 app.post('/api/carparks', (req, res) => {
     const { name, size } = req.body;
