@@ -62,11 +62,11 @@ window.addEventListener("DOMContentLoaded", () => {
     // Loads car parks from DB
     let carParks = [];
 
-  fetch('http://localhost:8080/api/spaces')
+    fetch('http://localhost:8080/api/carparks')
       .then(res => res.json())
       .then(data => {
-          carParks = data;
-          renderCarParks(); // Or whatever function you're using
+        carParks = data;
+        updateDropdown();
       })
       .catch(err => console.error('Error loading car parks:', err));
       
@@ -92,22 +92,6 @@ window.addEventListener("DOMContentLoaded", () => {
       }
   }
   
-    // Function ot save updates spaces to local storage (needs to be db)
-    function saveSpaces(spaces) {
-      localStorage.setItem("spaces", JSON.stringify(spaces));
-    }
-
-    // Function to validate & return a usable array of parking spaces
-    function getValidSpacesArray() {
-      try {
-        const stored = JSON.parse(localStorage.getItem("spaces"));
-        if (Array.isArray(stored)) return stored;
-      } catch (e) {
-        console.warn("Invalid 'spaces' data in localStorage. Resetting.");
-      }
-      return [];
-    }
-  
     // Dropdown of car parks
     function updateDropdown() {
       carParkSelect.innerHTML = "";
@@ -117,89 +101,112 @@ window.addEventListener("DOMContentLoaded", () => {
       placeholder.selected = true;
       placeholder.value = "";
       carParkSelect.appendChild(placeholder);
-  
+    
       carParks.forEach((park, index) => {
         const option = document.createElement("option");
         option.value = index;
-        option.textContent = `${park.name} (${park.spaces} spaces)`;
+        option.textContent = `${park.Name} (${park.Size} spaces)`;
         carParkSelect.appendChild(option);
       });
     }
   
-    // Add or update car park
-    addBtn.onclick = () => {
-      console.log("Add clicked");
-  
+    addBtn.onclick = async () => {
       const name = nameInput.value.trim();
-      const spaces = parseInt(spaceInput.value.trim(), 10);
-  
-      if (!name || isNaN(spaces) || spaces <= 0) {
+      const size = parseInt(spaceInput.value.trim(), 10);
+
+      if (!name || isNaN(size) || size <= 0) {
         alert("Please enter a valid name and number of spaces.");
         return;
       }
-  
-      let allSpaces = getValidSpacesArray();
-  
-      if (editingIndex !== null) {
-        const oldName = carParks[editingIndex].name;
-  
-        // Remove old spaces for car park being edited
-        allSpaces = allSpaces.filter(space => space.carPark !== oldName);
-  
-        // Update the car park
-        carParks[editingIndex] = { name, spaces };
-        editingIndex = null;
-      } else { // Add new car park
-        carParks.push({ name, spaces });
-      }
-  
-      // Add new spaces
-      for (let i = 1; i <= spaces; i++) {
-        allSpaces.push({
-          id: `${name}-A${i}`,
-          status: "available",
-          carPark: name,
+
+      const body = { name, size };
+
+      try {
+        const res = await fetch('http://localhost:8080/api/carparks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
         });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("Car park added successfully");
+          carParks.push({ CarparkID: data.CarparkID, Name: name, Size: size });
+          updateDropdown();
+          nameInput.value = '';
+          spaceInput.value = '';
+        } else {
+          alert(data.error || "Failed to add car park");
+        }
+      } catch (err) {
+        console.error('Add error:', err);
       }
-  
-      saveCarParks();
-      saveSpaces(allSpaces);
-      updateDropdown();
-  
-      nameInput.value = "";
-      spaceInput.value = "";
     };
   
-    // Loads selected car park values into form inputs for editing
-    editBtn.onclick = () => {
+    //Edit button frontend functionality
+    editBtn.onclick = async () => {
       const selectedIndex = carParkSelect.value;
       if (selectedIndex === "") return;
-  
+    
       const selected = carParks[selectedIndex];
-      nameInput.value = selected.name;
-      spaceInput.value = selected.spaces;
-      editingIndex = selectedIndex;
+      const name = nameInput.value.trim();
+      const size = parseInt(spaceInput.value.trim(), 10);
+    
+      if (!name || isNaN(size) || size <= 0) {
+        alert("Invalid input");
+        return;
+      }
+    
+      try {
+        const res = await fetch(`http://localhost:8080/api/carparks/${selected.CarparkID}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, size })
+        });
+    
+        if (res.ok) {
+          carParks[selectedIndex].Name = name;
+          carParks[selectedIndex].Size = size;
+          updateDropdown();
+          nameInput.value = '';
+          spaceInput.value = '';
+          editingIndex = null;
+          alert("Car park updated");
+        } else {
+          const data = await res.json();
+          alert(data.error || "Update failed");
+        }
+      } catch (err) {
+        console.error('Update error:', err);
+      }
     };
   
     // Deletes selected car park & removes associated spaces
-    deleteBtn.onclick = () => {
+    deleteBtn.onclick = async () => {
       const selectedIndex = carParkSelect.value;
       if (selectedIndex === "") return;
-  
-      if (!confirm("Are you sure you want to delete this car park?")) return;
-  
-      const removed = carParks.splice(selectedIndex, 1)[0];
-      editingIndex = null;
-      saveCarParks();
-      updateDropdown();
-  
-      // Remove all associated spaces
-      const allSpaces = getValidSpacesArray();
-      const filteredSpaces = allSpaces.filter(space => space.carPark !== removed.name);
-      saveSpaces(filteredSpaces);
-  
-      nameInput.value = "";
-      spaceInput.value = "";
+    
+      if (!confirm("Are you sure?")) return;
+    
+      const park = carParks[selectedIndex];
+    
+      try {
+        const res = await fetch(`http://localhost:8080/api/carparks/${park.CarparkID}`, {
+          method: 'DELETE'
+        });
+    
+        if (res.ok) {
+          carParks.splice(selectedIndex, 1);
+          updateDropdown();
+          alert("Car park and spaces deleted");
+        } else {
+          const data = await res.json();
+          alert(data.error || "Delete failed");
+        }
+      } catch (err) {
+        console.error('Delete error:', err);
+      }
     };
   
     // Initialises dropdown with existing car parks

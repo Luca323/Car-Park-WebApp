@@ -1,7 +1,6 @@
 const express = require('express');
 const connection = require('./db'); //Importing the connection
 const path = require('path');
-
 const app = express();
 const port = 8080;
 
@@ -9,7 +8,6 @@ app.use(express.json());
 
 //Serve login page
 app.use(express.static(path.join(__dirname, 'Public')));
-
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
@@ -21,6 +19,8 @@ app.listen(port, () => {
 function getRandomInt(max) { //Simple rng algorithm for ID generation
     return Math.floor(Math.random() * max);
   }
+
+//============================ Login/Register ================================================
 
 //Registration endpoint
 app.post('/register', (req, res) => {
@@ -89,47 +89,119 @@ app.post("/login", (req, res) => {
     });
 });
 
+//============================ Manage Carpark =================================================
+
 app.get('/api/spaces', (req, res) => {
     const query = 'SELECT * FROM Spaces';
     connection.query(query, (err, results) => {
         if (err) {
-            console.error('Failed to fetch spaces:', err);
+            console.error('Error fetching spaces:', err);
             return res.status(500).json({ error: 'Failed to fetch spaces' });
         }
         res.json(results);
     });
 });
 
-app.post('/api/spaces/update', (req, res) => { //Endpoint for creating carpark
-    const spaces = req.body;
 
-    if (!Array.isArray(spaces)) {
-        return res.status(400).json({ error: 'Invalid data format. Expected an array.' });
+app.post('/api/spaces', (req, res) => {
+    const { CarparkID, Price, Occupied, UserID } = req.body;
+
+    if (CarparkID == null || Price == null || Occupied == null) {
+        return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const queries = spaces.map(space => {
-        return new Promise((resolve, reject) => {
-            const { SpaceID, CarparkID, Price, Occupied, UserID } = space;
+    const query = `
+        INSERT INTO Spaces (CarparkID, Price, Occupied, UserID)
+        VALUES (?, ?, ?, ?)`;
 
-            const query = `
-                UPDATE Spaces SET 
-                    CarparkID = ?, 
-                    Price = ?, 
-                    Occupied = ?, 
-                    UserID = ?
-                WHERE SpaceID = ?`;
+    connection.query(query, [CarparkID, Price, Occupied, UserID || null], (err, result) => {
+        if (err) {
+            console.error('Error inserting space:', err);
+            return res.status(500).json({ error: 'Failed to add space' });
+        }
 
-            connection.query(query, [CarparkID, Price, Occupied, UserID, SpaceID], (err, result) => {
-                if (err) return reject(err);
-                resolve(result);
-            });
+        res.status(201).json({ message: 'Space added', SpaceID: result.insertId });
+    });
+});
+
+app.put('/api/spaces/:id', (req, res) => {
+    const { id } = req.params;
+    const { CarparkID, Price, Occupied, UserID } = req.body;
+
+    const query = `
+        UPDATE Spaces SET CarparkID = ?, Price = ?, Occupied = ?, UserID = ?
+        WHERE SpaceID = ?`;
+
+    connection.query(query, [CarparkID, Price, Occupied, UserID || null, id], (err) => {
+        if (err) {
+            console.error('Error updating space:', err);
+            return res.status(500).json({ error: 'Failed to update space' });
+        }
+
+        res.json({ message: 'Space updated' });
+    });
+});
+
+app.delete('/api/spaces/:id', (req, res) => {
+    const { id } = req.params;
+
+    const query = 'DELETE FROM Spaces WHERE SpaceID = ?';
+    connection.query(query, [id], (err) => {
+        if (err) {
+            console.error('Error deleting space:', err);
+            return res.status(500).json({ error: 'Failed to delete space' });
+        }
+
+        res.json({ message: 'Space deleted' });
+    });
+});
+
+app.get('/api/carparks', (req, res) => {
+    const query = 'SELECT CarparkID, Name, Size FROM Carparks';
+  
+    connection.query(query, (err, results) => {
+      if (err) {
+        console.error('Error retrieving car parks:', err);
+        return res.status(500).json({ error: 'Failed to retrieve car parks' });
+      }
+  
+      res.json(results);
+    });
+  });
+
+app.post('/api/carparks', (req, res) => {
+    const { name, size } = req.body;
+
+    if (!name || size == null || size <= 0) {
+        return res.status(400).json({ error: 'Name and valid size are required' });
+    }
+
+    const query = 'INSERT INTO Carparks (CarparkID, Name, Size) VALUES (?, ?, ?)';
+
+    connection.query(query, [getRandomInt(9999),name, size], (err, result) => {
+        if (err) {
+            console.error('Error adding car park:', err);
+            return res.status(500).json({ error: 'Failed to add car park' });
+        }
+
+        res.status(201).json({
+            message: 'Car park created',
+            CarparkID: result.insertId
         });
     });
+});
 
-    Promise.all(queries)
-        .then(() => res.status(200).json({ message: 'Spaces updated successfully' }))
-        .catch(err => {
-            console.error('Error updating spaces:', err);
-            res.status(500).json({ error: 'Database update failed' });
-        });
+app.delete('/api/carparks/:id', (req, res) => {
+    const { id } = req.params;
+
+    const query = 'DELETE FROM Carparks WHERE CarparkID = ?';
+
+    connection.query(query, [id], (err) => {
+        if (err) {
+            console.error('Error deleting car park:', err);
+            return res.status(500).json({ error: 'Failed to delete car park' });
+        }
+
+        res.json({ message: 'Car park and related spaces deleted' });
+    });
 });
