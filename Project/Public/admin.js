@@ -57,6 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const available = spaces.filter(s => !s.Occupied && s.UserID === null).length;
       const occupied = spaces.filter(s => s.Occupied && s.UserID !== null).length;
   
+      //Temporary placeholder
       const reserved = 0;
       const blocked = 0;
   
@@ -67,7 +68,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to update the dashboard summary & breakdown info
+  //Function to update the dashboard summary & breakdown info
   async function updateDashboard() {
     const { total, available, blocked, reserved, occupied, spaces } = await getStats();
   
@@ -82,7 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
       </ul>
     `;
   
-    // Group spaces by CarparkID
+    //Group spaces by Carpark
     const byCarPark = {};
   
     spaces.forEach(space => {
