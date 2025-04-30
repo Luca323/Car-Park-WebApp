@@ -50,11 +50,30 @@ BEGIN
     END WHILE;
 END$$
 
+CREATE PROCEDURE add_additional_spaces(IN parkId INT, IN oldSize INT, IN newSize INT)
+BEGIN
+    DECLARE i INT DEFAULT oldSize + 1;
+    WHILE i <= newSize DO
+        INSERT INTO Spaces (CarparkID, Price, Occupied, UserID)
+        VALUES (parkId, 0, FALSE, NULL);
+        SET i = i + 1;
+    END WHILE;
+END$$
+
 CREATE TRIGGER trg_auto_create_spaces
 AFTER INSERT ON Carparks
 FOR EACH ROW
 BEGIN
     CALL create_spaces_for_carpark(NEW.CarparkID, NEW.Size);
+END$$
+
+CREATE TRIGGER trg_auto_expand_spaces
+AFTER UPDATE ON Carparks
+FOR EACH ROW
+BEGIN
+    IF NEW.Size > OLD.Size THEN
+        CALL add_additional_spaces(NEW.CarparkID, OLD.Size, NEW.Size);
+    END IF;
 END$$
 
 CREATE TRIGGER `check_userid_on_occupied_insert`
