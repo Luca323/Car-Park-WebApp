@@ -6,6 +6,7 @@ CREATE TABLE logininfo
     Passkey VARCHAR(100) NOT NULL,
     Email Varchar(30) NOT NULL,
     PhoneNum VARCHAR(15) NOT NULL,
+    CarNum VARCHAR(10),
     Type ENUM('driver', 'admin') NOT NULL DEFAULT 'driver'
 );
 
@@ -16,7 +17,7 @@ CREATE TABLE Reservations(
     startDate DATE NOT NULL,
     Arrival TIME NOT NULL,
     Departure TIME NOT NULL,
-    FOREIGN KEY (SpaceID) REFERENCES Carpark(SpaceID) ON DELETE CASCADE,
+    FOREIGN KEY (SpaceID) REFERENCES Spaces(SpaceID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
 );
 
@@ -27,16 +28,34 @@ CREATE TABLE Carparks (
 );
 
 CREATE TABLE Spaces (
-    SpaceID INT PRIMARY KEY NOT NULL,
+    SpaceID INT AUTO_INCREMENT PRIMARY KEY,
     CarparkID INT NOT NULL,
     Price INT NOT NULL,
     Occupied BOOLEAN NOT NULL,
-    UserID INT,
+    UserID INT DEFAULT NULL,
     FOREIGN KEY (CarparkID) REFERENCES Carparks(CarparkID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
 );
 
+
 DELIMITER $$
+
+CREATE PROCEDURE create_spaces_for_carpark(IN parkId INT, IN numSpaces INT)
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    WHILE i <= numSpaces DO
+        INSERT INTO Spaces (CarparkID, Price, Occupied, UserID)
+        VALUES (parkId, 0, FALSE, NULL);
+        SET i = i + 1;
+    END WHILE;
+END$$
+
+CREATE TRIGGER trg_auto_create_spaces
+AFTER INSERT ON Carparks
+FOR EACH ROW
+BEGIN
+    CALL create_spaces_for_carpark(NEW.CarparkID, NEW.Size);
+END$$
 
 CREATE TRIGGER `check_userid_on_occupied_insert`
 BEFORE INSERT ON `Spaces`

@@ -100,7 +100,7 @@ app.get('/api/spaces', (req, res) => {
     });
 });
 
-app.post('/api/spaces/update', (req, res) => {
+app.post('/api/spaces/update', (req, res) => { //Endpoint for creating carpark
     const spaces = req.body;
 
     if (!Array.isArray(spaces)) {
