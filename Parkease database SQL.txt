@@ -33,6 +33,7 @@ CREATE TABLE Spaces (
     Price INT NOT NULL,
     Occupied BOOLEAN NOT NULL,
     UserID INT DEFAULT NULL,
+    Status ENUM('Available', 'Blocked', 'Reserved', 'Occupied') DEFAULT 'Available',
     FOREIGN KEY (CarparkID) REFERENCES Carparks(CarparkID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE SET NULL
 );

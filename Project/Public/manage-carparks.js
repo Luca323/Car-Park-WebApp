@@ -72,25 +72,6 @@ window.addEventListener("DOMContentLoaded", () => {
       
     let editingIndex = null;
   
-    async function saveCarParks() { //DB adaptation of function
-      try {
-          const response = await fetch('http://localhost:8080/api/spaces/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(carParks)
-          });
-  
-          const result = await response.json();
-  
-          if (response.ok) {
-              console.log('Car parks saved to DB.');
-          } else {
-              console.error('Failed to save car parks:', result.error);
-          }
-      } catch (err) {
-          console.error('Network error saving car parks:', err);
-      }
-  }
   
     // Dropdown of car parks
     function updateDropdown() {

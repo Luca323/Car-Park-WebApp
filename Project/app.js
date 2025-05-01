@@ -92,37 +92,29 @@ app.post("/login", (req, res) => {
 //============================ Admin Dashboard ===============================================
 
 app.get('/api/spaces', (req, res) => {
-    const query = 'SELECT * FROM Spaces';
+    const query = `
+      SELECT 
+        Spaces.SpaceID,
+        Spaces.CarparkID,
+        Carparks.Name AS CarparkName,
+        Spaces.Price,
+        Spaces.Occupied,
+        Spaces.UserID
+      FROM Spaces
+      JOIN Carparks ON Spaces.CarparkID = Carparks.CarparkID
+    `;
+  
     connection.query(query, (err, results) => {
-      if (err) return res.status(500).json({ 
-        error: 'Failed to fetch spaces' 
-        });
+      if (err) {
+        console.error('Error fetching spaces with carpark names:', err);
+        return res.status(500).json({ error: 'Failed to fetch space data' });
+      }
       res.json(results);
     });
   });
 
 //============================ Manage Carpark =================================================
 
-app.post('/api/spaces', (req, res) => {
-    const { CarparkID, Price, Occupied, UserID } = req.body;
-
-    if (CarparkID == null || Price == null || Occupied == null) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const query = `
-        INSERT INTO Spaces (CarparkID, Price, Occupied, UserID)
-        VALUES (?, ?, ?, ?)`;
-
-    connection.query(query, [CarparkID, Price, Occupied, UserID || null], (err, result) => {
-        if (err) {
-            console.error('Error inserting space:', err);
-            return res.status(500).json({ error: 'Failed to add space' });
-        }
-
-        res.status(201).json({ message: 'Space added', SpaceID: result.insertId });
-    });
-});
 
 app.put('/api/carparks/:id', (req, res) => {
     const { name, size } = req.body;

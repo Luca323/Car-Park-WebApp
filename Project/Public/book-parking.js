@@ -21,11 +21,21 @@ window.addEventListener("DOMContentLoaded", () => {
     const section = document.createElement("div");
     section.className = "section";
     section.innerHTML = "<h2>Parking Booking</h2>";
-  
+
+    let carParks = [];
+
+    fetch('http://localhost:8080/api/carparks') //Retrieved from DB
+      .then(res => res.json())
+      .then(data => {
+        carParks = data;
+        updateDropdown();
+      })
+      .catch(err => console.error('Error loading car parks:', err));
+
     // Dropdown to select car park 
     const carParkSelect = document.createElement("select");
     carParkSelect.className = "event-input";
-    const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+    //const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
     const defaultOption = document.createElement("option");
     defaultOption.textContent = "Select a Car Park";
     defaultOption.disabled = true;
@@ -35,9 +45,27 @@ window.addEventListener("DOMContentLoaded", () => {
     carParks.forEach(park => {
       const opt = document.createElement("option");
       opt.value = park.name;
-      opt.textContent = park.name;
+      opt.textContent = park.name; 
       carParkSelect.appendChild(opt);
     });
+
+    function updateDropdown() { //Copied from manage-carpark.js
+      carParkSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.textContent = "Select a car park";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.value = "";
+      carParkSelect.appendChild(placeholder);
+    
+      carParks.forEach((park, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = `${park.Name} (${park.Size} spaces)`;
+        carParkSelect.appendChild(option);
+      });
+    }
+
   
     // Inputs for start & end date/times 
     const startDateInput = document.createElement("input");
@@ -146,4 +174,6 @@ window.addEventListener("DOMContentLoaded", () => {
   
     startDateInput.addEventListener("change", displayCost);
     endDateInput.addEventListener("change", displayCost);
+
+    updateDropdown();
   });

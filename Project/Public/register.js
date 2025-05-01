@@ -15,7 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Creating input fieldss
     const nameInput = document.createElement("input");
     nameInput.type = "text";
-    nameInput.placeholder = "Full Name";
+    nameInput.placeholder = "Create Username";
     nameInput.required = true;
   
     const regInput = document.createElement("input");

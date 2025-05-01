@@ -83,34 +83,31 @@ window.addEventListener("DOMContentLoaded", () => {
       </ul>
     `;
   
-    //Group spaces by Carpark
+    // Breakdown by car park name
     const byCarPark = {};
   
     spaces.forEach(space => {
-      const carparkId = space.CarparkID;
+      const name = `${space.CarparkName} (ID: ${space.CarparkID})`;
   
-      if (!byCarPark[carparkId]) {
-        byCarPark[carparkId] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
+      if (!byCarPark[name]) {
+        byCarPark[name] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
       }
   
-      // Determine status
-      let status = "available";
+      let status = 'available';
       if (space.Occupied && space.UserID !== null) {
-        status = "occupied";
+        status = 'occupied';
       }
   
-      // Add to breakdown
-      byCarPark[carparkId][status]++;
+      byCarPark[name][status]++;
     });
   
-    // Display breakdown
     breakdownSection.innerHTML = `<h2>Car Park Breakdown</h2>`;
     const ul = document.createElement("ul");
   
-    for (const [id, stats] of Object.entries(byCarPark)) {
+    for (const [name, stats] of Object.entries(byCarPark)) {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>Carpark ID ${id}</strong> —
+        <strong>${name}</strong> —
         ${stats.available} available,
         ${stats.blocked} blocked,
         ${stats.reserved} reserved,
