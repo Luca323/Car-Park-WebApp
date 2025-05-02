@@ -49,7 +49,6 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    getUserID();
     // Dropdown to select car park 
     const carParkSelect = document.createElement("select");
     carParkSelect.className = "event-input";

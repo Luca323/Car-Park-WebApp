@@ -10,17 +10,6 @@ CREATE TABLE logininfo
     Type ENUM('driver', 'admin') NOT NULL DEFAULT 'driver'
 );
 
-CREATE TABLE Reservations(
-    ReservationID INTEGER PRIMARY KEY NOT NULL,
-    UserID INTEGER NOT NULL,
-    SpaceID INTEGER NOT NULL,
-    startDate DATE NOT NULL,
-    Arrival TIME NOT NULL,
-    Departure TIME NOT NULL,
-    FOREIGN KEY (SpaceID) REFERENCES Spaces(SpaceID) ON DELETE CASCADE,
-    FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
-);
-
 CREATE TABLE Carparks (
      CarparkID INT PRIMARY KEY NOT NULL,
      Name VARCHAR(20),
@@ -38,6 +27,25 @@ CREATE TABLE Spaces (
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE SET NULL
 );
 
+CREATE TABLE Requests(
+    ReqID INT NOT NULL PRIMARY KEY,
+    CarParkID ID NOT NULL,
+    Start DATE NOT NULL,
+    Cost DECIMAL(10,2),
+    Status VARCHAR(20),
+    FOREIGN KEY (CarParkID) REFERENCES Carparks(CarparkID) ON DELETE CASCADE
+);
+
+CREATE TABLE Reservations(
+    ReservationID INTEGER PRIMARY KEY NOT NULL,
+    UserID INTEGER NOT NULL,
+    SpaceID INTEGER NOT NULL,
+    startDate DATE NOT NULL,
+    Arrival TIME NOT NULL,
+    Departure TIME NOT NULL,
+    FOREIGN KEY (SpaceID) REFERENCES Spaces(SpaceID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
+);
 
 DELIMITER $$
 

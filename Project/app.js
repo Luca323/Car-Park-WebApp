@@ -134,6 +134,7 @@ app.get('/api/spaces', (req, res) => {
     });
   });
 
+
 //============================ Manage Carpark =================================================
 
 
@@ -223,3 +224,8 @@ app.delete('/api/carparks/:id', (req, res) => {
         res.json({ message: 'Car park and related spaces deleted' });
     });
 });
+
+//============================ Book Parking =================================================
+
+
+
