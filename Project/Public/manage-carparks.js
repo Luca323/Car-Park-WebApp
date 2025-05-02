@@ -86,7 +86,7 @@ window.addEventListener("DOMContentLoaded", () => {
       carParks.forEach((park, index) => {
         const option = document.createElement("option");
         option.value = index;
-        option.textContent = `${park.Name} (${park.Size} spaces)`;
+        option.textContent = `${park.Name}`;
         carParkSelect.appendChild(option);
       });
     }

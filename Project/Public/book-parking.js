@@ -32,6 +32,24 @@ window.addEventListener("DOMContentLoaded", () => {
       })
       .catch(err => console.error('Error loading car parks:', err));
 
+    async function getUserID() { //Retrieves logged in user id for future use
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const data = await res.json();
+    
+        if (data.userID) {
+          console.log(`Logged in as ${data.userID}`)
+          return data.userID;
+          // Call functions that depend on userID here
+        } else {
+          window.location.href = '/login.html';
+        }
+      } catch (err) {
+        console.error("Error fetching user ID:", err);
+      }
+    }
+
+    getUserID();
     // Dropdown to select car park 
     const carParkSelect = document.createElement("select");
     carParkSelect.className = "event-input";

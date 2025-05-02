@@ -2,6 +2,15 @@ const express = require('express');
 const connection = require('./db'); //Importing the connection
 const path = require('path');
 const app = express();
+const session = require('express-session');
+
+app.use(session({ //Not sure what this does tbh
+  secret: 'balls',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
 const port = 8080;
 
 app.use(express.json());
@@ -63,7 +72,7 @@ app.post("/login", (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const compare = 'SELECT Passkey, Type FROM logininfo WHERE Username = ?';
+    const compare = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
     connection.query(compare, [username], (err, results) => {
         if (err) {
             console.error(err);
@@ -82,14 +91,26 @@ app.post("/login", (req, res) => {
         const accType = results[0].Type;
 
         if (passkey === storedPasskey) {
-            return res.status(200).json({ message: 'Login successful', Type: accType });
+            req.session.UserID = results[0].UserID;
+            return res.status(200).json(
+                { message: 'Login successful', Type: accType
+
+                });
         } else {
             return res.status(401).json({ error: 'Incorrect username or password' });
         }
     });
 });
 
+app.get('/api/me', (req, res) => {
+    res.json({ userID: req.session.UserID || null });
+  });
+
 //============================ Admin Dashboard ===============================================
+
+app.get('/api/me', (req, res) => { //Simple reusable to retrieve userID
+    res.json({ userID: req.session.UserID || null });
+  });
 
 app.get('/api/spaces', (req, res) => {
     const query = `

@@ -61,6 +61,7 @@ window.addEventListener("DOMContentLoaded", () => {
     
             if (response.ok) {
                 alert('Logged in successfully!');
+
                 if(data.Type == 'driver'){
                     location.href = "driver-dashboard.html";
                 }
@@ -78,5 +79,4 @@ window.addEventListener("DOMContentLoaded", () => {
     };
 
 });
-
 
