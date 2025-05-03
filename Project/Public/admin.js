@@ -179,8 +179,8 @@ window.addEventListener("DOMContentLoaded", () => {
           });
 
           alert("Request accepted and space reserved");
-          updateDashboard();
-          updateRequests();
+          await updateDashboard();
+          await updateRequests();
         };
   
   
@@ -195,7 +195,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         alert("Request rejected");
-        updateRequests();
+        await updateRequests();
       };
 
       li.appendChild(acceptBtn);

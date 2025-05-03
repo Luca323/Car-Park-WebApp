@@ -256,27 +256,50 @@ app.post('/api/requests', (req, res) => {
 // admin view - get all parking reqs with car park name
 app.get('/api/requests', (req, res) => {
   const query = `
-  SELECT
-    r.ReqID AS id,
-    r.CarParkID,
-    r.UserID,
-    r.Start AS startDate,
-    r.End AS endDate,
-    r.Cost AS cost,
-    r.Status AS status,
-    r.SpaceID,
-    c.Name AS carPark
-    FROM Requests r
-    JOIN Carparks c ON r.CarParkID = c.CarparkID
-  `;
-  
+    SELECT
+      r.ReqID AS id,
+      r.CarParkID,
+      r.UserID,
+      r.Start AS startDate,
+      r.End AS endDate,
+      r.Cost AS cost,
+      r.Status AS status,
+      r.SpaceID,
+      c.Name AS carPark
+      FROM Requests r
+      JOIN Carparks c ON r.CarParkID = c.CarparkID
+    `;
+
   connection.query(query, (err, results) => {
     if (err) {
       console.error("Error fetching requests:", err);
       return res.status(500).json({error: "Failed to retrieve reqs"});
     }
     res.json(results);
-  })
-})
+  });
+});
 
+// admin action: update parking request on accept/reject
+app.put('/api/requests/:id', (req, res) => {
+  const requestId = req.params.id;
+  const { status, spaceId } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: "status is required" });
+  }
+
+  const query = `
+  UPDATE Requests
+  SET Status = ?, SpaceID = ?
+  WHERE ReqID = ?
+  `;
+
+  connection.query(query, [status, spaceId || null, requestId], (err, result) => {
+    if (err) {
+      console.error('Error updating request:', err);
+      return res.status(500).json({ error: "Failed to update request"});
+    }
+    res.json({ message: "Request updated successfully"});
+  });
+});
 

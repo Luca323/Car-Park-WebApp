@@ -46,9 +46,15 @@ window.addEventListener("DOMContentLoaded", () => {
     pastSection.appendChild(pastList);
     container.appendChild(pastSection);
   
-    // Loads all requests from local storage (needs to be DB)
-    function loadRequests() {
-      return JSON.parse(localStorage.getItem("parkingRequests")) || [];
+    // Loads all requests from DB
+    async function loadRequests() {
+      const meRes = await fetch("/api/me");
+      const { userID } = await meRes.json();
+
+      const res = await fetch("/api/requests");
+      const allRequests = await res.json();
+
+      return allRequests.filter(r => r.UserID === userID);
     }
   
     // Building the UI element for each parking session
@@ -118,9 +124,9 @@ window.addEventListener("DOMContentLoaded", () => {
       
   
     // Function to render each section of the dashboard
-    function renderSessions() {
+    async function renderSessions() {
         const now = new Date();
-        const allRequests = loadRequests();
+        const allRequests = await loadRequests();
       
         // Filters current sessions
         const current = allRequests.filter(r =>
