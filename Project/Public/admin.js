@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Function that gets the current parking space stats 
   async function getStats() {
     try {
-      const res = await fetch('http://localhost:8080/api/spaces');
+      const res = await fetch(`http://localhost:8080/api/spaces`);
   
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
@@ -122,27 +122,25 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Function to display pending parking requests & allow the admin to accept/reject them
   async function updateRequests() {
+    requestsSection.innerHTML = `<h2>Parking Requests</h2>`;
     try {
       const[requestsRes, spacesRes] = await Promise.all([
-        fetch("http://localhost:8080/api/requests"),
-        fetch("http://localhost:8080/api/spaces")
+        fetch(`http://localhost:8080/api/requests`),
+        fetch(`http://localhost:8080/api/spaces`)
       ]);
       
       const requests = await requestsRes.json();
       const spaces = await spacesRes.json();
+      const pending = requests.filter(r => r.status === "pending");
 
-      const pendingRequests = requests.filter(req => req.status === "pending");
-
-      requestsSection.innerHTML = `<h2>Parking Requests</h2>`;
-
-      if (pendingRequests.length === 0) {
+      if (pending.length === 0) {
         requestsSection.innerHTML += `<p>No pending parking requests.</p>`;
         return;
       }
 
       const list = document.createElement("ul");
   
-      pendingRequests.forEach((req, i) => {
+      pending.forEach(req => {
         const li = document.createElement("li");
         li.innerHTML = `
           <strong>Request ID:</strong> ${req.id}<br>
@@ -156,7 +154,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const acceptBtn = document.createElement("button");
         acceptBtn.textContent = "Accept";
         acceptBtn.onclick = async () => {
-          const available = spaces.filter(s => s.carPark === req.carPark && !s.Occupied && s.status === "available");
+          const available = spaces.filter(s => s.carPark === req.carPark && !s.Occupied && s.UserID === null);
     
           if (available.length === 0) {
             alert('No available spaces in ${req.carPark} to assign.');
@@ -166,16 +164,10 @@ window.addEventListener("DOMContentLoaded", () => {
           // Assigns the driver the first available space
           const assigned = available[0];
 
-          await fetch('http://localhost:8080/api/spaces/${assigned.id}', {
+          await fetch(`http://localhost:8080/api/requests/${req.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json"},
-            body: JSON.stringify({ status: "reserved"})
-          });
-
-          await fetch('http://localhost:8080/api/requests/${req.id}', {
-            method: "PUT",
-            headers: { "Content-Type": "application/json"},
-            body: JSON.stringify({ status: "accepted", spaceId: assigned.id})
+            body: JSON.stringify({ status: "accepted", spaceId: assigned.SpaceID})
           });
 
           alert("Request accepted and space reserved");
@@ -188,14 +180,14 @@ window.addEventListener("DOMContentLoaded", () => {
       const rejectBtn = document.createElement("button");
       rejectBtn.textContent = "Reject";
       rejectBtn.onclick = async () => {
-        await fetch('http://localhost:8080/api/requests/${req.id}', {
+        await fetch(`http://localhost:8080/api/requests/${req.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json"},
           body: JSON.stringify({ status: "rejected"})
         });
-
         alert("Request rejected");
         await updateRequests();
+        await updateDashboard();
       };
 
       li.appendChild(acceptBtn);
@@ -218,8 +210,7 @@ window.addEventListener("DOMContentLoaded", () => {
     spaces.forEach(space => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${space.id}</strong> — ${space.carPark} — ${space.status.toUpperCase()}
-        ${space.reason ? `(Reason: ${space.reason})` : ""}
+        <strong>${space.SpaceID}</strong> — ${space.CarparkName} — ${space.Occupied ? 'OCCUPIED' : 'AVAILABLE'}
       `;
       list.appendChild(li);
     });

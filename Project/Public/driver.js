@@ -77,36 +77,25 @@ window.addEventListener("DOMContentLoaded", () => {
           const notifyBtn = document.createElement("button");
           notifyBtn.textContent = "Notify Departure";
       
-          notifyBtn.onclick = () => {
-            const spaces = JSON.parse(localStorage.getItem("spaces")) || [];
-            const spaceIndex = spaces.findIndex(s => s.id === request.spaceId);
-      
-            if (spaceIndex !== -1) {
-              spaces[spaceIndex].status = "available";
-              localStorage.setItem("spaces", JSON.stringify(spaces));
-            }
-      
-            request.status = "completed";
-            request.endDate = new Date().toISOString();
-      
-            const allRequests = JSON.parse(localStorage.getItem("parkingRequests")) || [];
-            const reqIndex = allRequests.findIndex(r => r.id === request.id);
-            if (reqIndex !== -1) {
-              allRequests[reqIndex] = request;
-              localStorage.setItem("parkingRequests", JSON.stringify(allRequests));
-            }
-      
-            alert("✅ Departure recorded.");
-            renderSessions();
+          notifyBtn.onclick = async () => {
+            const now = new Date().toISOString();
+            await fetch('api/requests/${request.id}', {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "completed", endDate: now })
+            });
+            
+            alert("Departure Recorded");
+            location.reload();
           };
-      
+          
           li.appendChild(notifyBtn);
         }
       
         // Add Locate Parking Space button - only for upcoming sessions
         const isUpcoming =
           request.status === "accepted" &&
-          start > now;
+          new Date(r.startDate) > now;
       
         if (!showNotifyBtn && isUpcoming) {
           const locateBtn = document.createElement("button");

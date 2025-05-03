@@ -282,19 +282,43 @@ app.get('/api/requests', (req, res) => {
 // admin action: update parking request on accept/reject
 app.put('/api/requests/:id', (req, res) => {
   const requestId = req.params.id;
-  const { status, spaceId } = req.body;
+  const { status, spaceId, endDate } = req.body;
+
+  console.log("Request update:", { id: requestId, body: req.body });
 
   if (!status) {
     return res.status(400).json({ error: "status is required" });
   }
 
-  const query = `
-  UPDATE Requests
-  SET Status = ?, SpaceID = ?
-  WHERE ReqID = ?
-  `;
+  let query = '';
+  let params = [];
 
-  connection.query(query, [status, spaceId || null, requestId], (err, result) => {
+  if (status === 'completed' && endDate) {
+    query = `
+    UPDATE Requests
+    SET Status = ?,
+    End = ?
+    WHERE ReqID = ?
+    `;
+    params = [status, endDate, requestId];
+  } else if (status === 'accepted') {
+    query = `
+    UPDATE Requests
+    SET Status = ?,
+    SpaceID = ?
+    WHERE ReqID = ?
+    `;
+    params = [status, spaceId || null, requestId];
+  } else {
+    query = `
+    UPDATE Requests
+    SET Status = ?
+    WHERE ReqID = ?
+    `;
+    params = [status, requestId];
+  }
+
+  connection.query(query, params, (err, result) => {
     if (err) {
       console.error('Error updating request:', err);
       return res.status(500).json({ error: "Failed to update request"});
