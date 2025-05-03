@@ -36,7 +36,7 @@ window.addEventListener("DOMContentLoaded", () => {
   spaceListSection.className = "section";
   container.appendChild(spaceListSection);
 
-  // Function that gets the current parking space stats (from localstorage - will be DB tho)
+  // Function that gets the current parking space stats 
   async function getStats() {
     try {
       const res = await fetch('http://localhost:8080/api/spaces');
