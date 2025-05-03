@@ -253,3 +253,30 @@ app.post('/api/requests', (req, res) => {
   );
 });
 
+// admin view - get all parking reqs with car park name
+app.get('/api/requests', (req, res) => {
+  const query = `
+  SELECT
+    r.ReqID AS id,
+    r.CarParkID,
+    r.UserID,
+    r.Start AS startDate,
+    r.End AS endDate,
+    r.Cost AS cost,
+    r.Status AS status,
+    r.SpaceID,
+    c.Name AS carPark
+    FROM Requests r
+    JOIN Carparks c ON r.CarParkID = c.CarparkID
+  `;
+  
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching requests:", err);
+      return res.status(500).json({error: "Failed to retrieve reqs"});
+    }
+    res.json(results);
+  })
+})
+
+
