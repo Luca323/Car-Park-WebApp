@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
     container.className = "container";
 
     const heading = document.createElement("h2");
-    heading.textContent = "Car Park Registration";
+    heading.textContent = "Registration";
 
     // Creating the register form 
     const form = document.createElement("form");

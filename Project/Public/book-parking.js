@@ -22,16 +22,6 @@ window.addEventListener("DOMContentLoaded", () => {
     section.className = "section";
     section.innerHTML = "<h2>Parking Booking</h2>";
 
-    let carParks = [];
-
-    fetch('http://localhost:8080/api/carparks') //Retrieved from DB
-      .then(res => res.json())
-      .then(data => {
-        carParks = data;
-        updateDropdown();
-      })
-      .catch(err => console.error('Error loading car parks:', err));
-
     async function getUserID() { //Retrieves logged in user id for future use
       try {
         const res = await fetch('/api/me', { credentials: 'include' });
@@ -48,6 +38,16 @@ window.addEventListener("DOMContentLoaded", () => {
         console.error("Error fetching user ID:", err);
       }
     }
+
+    let carParks = [];
+
+    fetch('./api/carparks') //Retrieved from DB
+      .then(res => res.json())
+      .then(data => {
+        carParks = data;
+        updateDropdown();
+      })
+      .catch(err => console.error('Error loading car parks:', err));
 
     // Dropdown to select car park 
     const carParkSelect = document.createElement("select");
@@ -126,53 +126,63 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   
     // Logic for handling the submission of the parking request
-    submitBtn.onclick = () => {
-      const carPark = carParkSelect.value;
+    submitBtn.onclick = async () => {
+      const selectedIndex = carParkSelect.value;
       const startDate = startDateInput.value;
       const endDate = endDateInput.value;
-  
-      // Validation of all fields
-      if (!carPark || !startDate || !endDate) {
+    
+      if (!selectedIndex || !startDate || !endDate) {
         alert("Please fill in all fields.");
         return;
       }
-  
+    
       const cost = calculateCost(startDate, endDate);
       if (cost <= 0) {
         alert("Invalid time range.");
         return;
       }
-  
-      // Simulation of payment step
+    
       const confirmPayment = confirm(`Simulated Payment: £${cost}\n\nClick OK to confirm payment.`);
       if (!confirmPayment) {
         alert("Payment cancelled. Request not submitted.");
         return;
       }
-  
-      // Creates new parking request object
+    
+      const userID = await getUserID(); // ✅ get logged in user
+      const carPark = carParks[selectedIndex]; // ✅ get selected car park object
+    
       const newRequest = {
-        id: `REQ-${Date.now()}`,
-        carPark,
-        startDate,
-        endDate,
-        cost,
+        carParkID: carPark.CarparkID,
+        userID: userID,
+        startDate: startDate,
+        endDate: endDate,
+        cost: parseFloat(cost),
         status: "pending"
       };
-  
-      // Saves the new parking request to local storage (needs to be DB)
-      const parkingRequests = JSON.parse(localStorage.getItem("parkingRequests")) || [];
-      parkingRequests.push(newRequest);
-      localStorage.setItem("parkingRequests", JSON.stringify(parkingRequests));
-  
-      // Alerts user of successful payment
-      alert("✅ Payment successful! Your parking request has been submitted.");
-      
-      // Clears form values
-      startDateInput.value = "";
-      endDateInput.value = "";
-      carParkSelect.value = "";
-      paymentInfo.innerHTML = "";
+    
+      try {
+        const res = await fetch('./api/requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(newRequest)
+        });
+    
+        const data = await res.json();
+    
+        if (res.ok) {
+          alert("✅ Payment successful! Your parking request has been submitted.");
+          startDateInput.value = "";
+          endDateInput.value = "";
+          carParkSelect.value = "";
+          paymentInfo.innerHTML = "";
+        } else {
+          alert(data.error || "Failed to submit request.");
+        }
+      } catch (err) {
+        console.error('Request error:', err);
+        alert("Error submitting request.");
+      }
     };
   
     // Displays cost

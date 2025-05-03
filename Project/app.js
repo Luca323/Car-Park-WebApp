@@ -18,7 +18,7 @@ app.use(express.json());
 //Serve login page
 app.use(express.static(path.join(__dirname, 'Public')));
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'dashboard.html'));
 });
 
 app.listen(port, () => {
@@ -137,7 +137,6 @@ app.get('/api/spaces', (req, res) => {
 
 //============================ Manage Carpark =================================================
 
-
 app.put('/api/carparks/:id', (req, res) => {
     const { name, size } = req.body;
     const { id } = req.params;
@@ -225,7 +224,32 @@ app.delete('/api/carparks/:id', (req, res) => {
     });
 });
 
-//============================ Book Parking =================================================
+//============================ Book Parking & Handle requests =================================================
 
+app.post('/api/requests', (req, res) => {
+  const { carParkID, userID, startDate, endDate, cost, status } = req.body;
 
+  // Basic validation
+  if (!carParkID || !userID || !startDate || !endDate) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const query = `
+    INSERT INTO Requests (CarParkID, UserID, Start, End, Cost, Status)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(
+    query,
+    [carParkID, userID, startDate, endDate, cost || 0.0, status || 'pending'],
+    (err, result) => {
+      if (err) {
+        console.error('DB error:', err);
+        return res.status(500).json({ error: 'Database insert failed' });
+      }
+
+      res.status(201).json({ message: 'Request submitted', requestID: result.insertId });
+    }
+  );
+});
 
