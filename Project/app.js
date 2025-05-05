@@ -107,48 +107,6 @@ app.post('/register', (req, res) => {
     });
 });
 
-//Log-In Endpoint
-app.post("/login", (req, res) => {
-    const { username, passkey } = req.body;
-
-    if (!username || !passkey) {
-        return res.status(400).json({ error: 'Username and password are required' });
-    }
-
-    const compare = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
-    connection.query(compare, [username], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        if (results.length === 0) {
-            return res.status(401).json({ error: 'Incorrect username or password' });
-        }
-
-        if (results.length > 1) {
-            return res.status(409).json({ error: 'Logic error: duplicate usernames' });
-        }
-
-        const storedPasskey = results[0].Passkey;
-        const accType = results[0].Type;
-
-        if (passkey === storedPasskey) {
-            req.session.UserID = results[0].UserID;
-            return res.status(200).json(
-                { message: 'Login successful', Type: accType
-
-                });
-        } else {
-            return res.status(401).json({ error: 'Incorrect username or password' });
-        }
-    });
-});
-
-app.get('/api/me', (req, res) => {
-    res.json({ userID: req.session.UserID || null });
-  });
-
 //============================ Admin Dashboard ===============================================
 
 app.get('/api/me', (req, res) => { //Simple reusable to retrieve userID
