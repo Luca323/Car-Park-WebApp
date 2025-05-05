@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'chopseven@gmail.com',
-    pass: 'AIzaSyCMJ_Lg9XIhE__iSlQDGJsWN6-osFUez74' // Use an app password, NOT your real one
+    pass: 'bxqf vaim aucu qgyr' // Use an app password, NOT your real one
   }
 });
 
@@ -353,7 +353,7 @@ app.post('/api/notify', (req, res) => {
     // Prepare email sending
     const sendEmailPromises = emails.map(email =>
       transporter.sendMail({
-        from: '"ParkEase Admin" <your.email@gmail.com>',
+        from: '"ParkEase Admin" <chopseven@gmail.com>',
         to: email,
         subject: 'Important Parking Notification',
         text: message
