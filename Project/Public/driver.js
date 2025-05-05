@@ -82,7 +82,7 @@ window.addEventListener("DOMContentLoaded", () => {
             await fetch('api/requests/${request.id}', {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: "completed", endDate: now })
+              body: JSON.stringify({ status: "completed", endDate: now }) 
             });
             
             alert("Departure Recorded");
