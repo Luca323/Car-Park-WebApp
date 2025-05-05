@@ -30,7 +30,7 @@ window.addEventListener("DOMContentLoaded", () => {
     submitBtn.textContent = "Login";
 
     const registerBtn = document.createElement("a");
-    registerBtn.href = "register.html";
+    registerBtn.href = "/register";
     registerBtn.textContent = "Click here to register for an account!";
 
     
@@ -63,10 +63,10 @@ window.addEventListener("DOMContentLoaded", () => {
                 alert('Logged in successfully!');
 
                 if(data.Type == 'driver'){
-                    location.href = "driver-dashboard.html";
+                    location.href = "/driverdashboard";
                 }
                 else if(data.Type == 'admin'){
-                    location.href = "admin-dashboard.html";
+                    location.href = "/admindashboard";
                 }
             } else {
                 console.log(data.error)

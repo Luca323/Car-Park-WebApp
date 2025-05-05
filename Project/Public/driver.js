@@ -6,9 +6,9 @@ window.addEventListener("DOMContentLoaded", () => {
   
     const nav = document.createElement("nav");
     nav.innerHTML = `
-      <a href="driver-dashboard.html">Dashboard</a>
-      <a href="book-parking.html">Book Parking</a>
-      <a href="contact-us.html">Contact Us</a>
+      <a href="/driverdashboard">Dashboard</a>
+      <a href="/bookparking">Book Parking</a>
+      <a href="/contactus">Contact Us</a>
     `;
     document.body.appendChild(nav);
   

@@ -22,6 +22,46 @@ app.use(session({
 
 const port = 8080;
 
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'login.html'));
+});
+
+app.get('/contactus', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
+});
+
+app.get('/bookparking', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'book-parking.html'));
+});
+
+app.get('/driverdashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'driver-dashboard.html'));
+});
+
+app.get('/managecarparks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-carparks.html'));
+});
+
+app.get('/manageevents', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-events.html'));
+});
+
+app.get('/managespaces', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'register.html'));
+});
+
+app.get('/sendnotif', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
+});
+
+app.get('/admindashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
+});
+
 app.use(express.json());
 
 //Serve login page

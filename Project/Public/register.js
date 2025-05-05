@@ -73,7 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         if (response.ok) {
           alert('Registration successful! You can now log in.');
-          location.href = 'login.html';
+          location.href = '/login';
         } else {
           alert(data.error || 'Registration failed');
         }

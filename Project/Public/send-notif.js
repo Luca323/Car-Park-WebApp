@@ -6,11 +6,11 @@ window.addEventListener("DOMContentLoaded", () => {
   
   const nav = document.createElement("nav");
   nav.innerHTML = `
-    <a href="admin-dashboard.html">Dashboard</a>
-    <a href="manage-carparks.html">Manage Car Parks</a>
-    <a href="manage-spaces.html">Manage Spaces</a>
-    <a href="manage-events.html">Manage Events</a>
-    <a href="send-notif.html">Send Notifications</a>
+    <a href="/admindashboard">Dashboard</a>
+    <a href="/managecarparks">Manage Car Parks</a>
+    <a href="/managespaces">Manage Spaces</a>
+    <a href="/manageevents">Manage Events</a>
+    <a href="/sendnotif">Send Notifications</a>
   `;
   document.body.appendChild(nav);
 
