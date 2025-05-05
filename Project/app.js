@@ -2,6 +2,8 @@ const express = require('express');
 const connection = require('./db'); //Importing the connection
 const path = require('path');
 const app = express();
+const nodemailer = require('nodemailer');
+
 
 const session = require('express-session');
 
