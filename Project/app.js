@@ -2,13 +2,14 @@ const express = require('express');
 const connection = require('./db'); //Importing the connection
 const path = require('path');
 const app = express();
+
 const session = require('express-session');
 
-app.use(session({ //Not sure what this does tbh
-  secret: 'balls',
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'strong-fallback-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false }
+  cookie: { secure: false } // Set to true if using HTTPS
 }));
 
 const port = 8080;
@@ -30,6 +31,53 @@ function getRandomInt(max) { //Simple rng algorithm for ID generation
   }
 
 //============================ Login/Register ================================================
+const bcrypt = require('bcrypt');
+
+app.post('/register', async (req, res) => {
+  const { username, passkey } = req.body;
+  if (!username || !passkey) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
+  connection.query(checkQuery, [username], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length > 0) return res.status(409).json({ error: 'User exists' });
+
+    const hashedPassword = await bcrypt.hash(passkey, 10);
+    const insertQuery = 'INSERT INTO logininfo (Username, Passkey) VALUES (?, ?)';
+    connection.query(insertQuery, [username, hashedPassword], (err) => {
+      if (err) return res.status(500).json({ error: 'Insert failed' });
+      res.status(201).json({ message: 'User registered successfully' });
+    });
+  });
+});
+
+const bcrypt = require('bcrypt');
+
+app.post('/login', (req, res) => {
+  const { username, passkey } = req.body;
+  if (!username || !passkey) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  const query = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
+  connection.query(query, [username], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
+
+    const storedHash = results[0].Passkey;
+    const match = await bcrypt.compare(passkey, storedHash);
+
+    if (match) {
+      req.session.UserID = results[0].UserID;
+      return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
+    } else {
+      return res.status(401).json({ error: 'Invalid login' });
+    }
+  });
+});
+
 
 //Registration endpoint
 app.post('/register', (req, res) => {
