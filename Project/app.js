@@ -53,8 +53,6 @@ app.post('/register', async (req, res) => {
   });
 });
 
-const bcrypt = require('bcrypt');
-
 app.post('/login', (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
