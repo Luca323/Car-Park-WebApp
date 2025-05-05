@@ -41,26 +41,6 @@ function getRandomInt(max) { //Simple rng algorithm for ID generation
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
-app.post('/register', async (req, res) => {
-  const { username, passkey } = req.body;
-  if (!username || !passkey) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
-
-  const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
-  connection.query(checkQuery, [username], async (err, results) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (results.length > 0) return res.status(409).json({ error: 'User exists' });
-
-    const hashedPassword = await bcrypt.hash(passkey, 10);
-    const insertQuery = 'INSERT INTO logininfo (Username, Passkey) VALUES (?, ?)';
-    connection.query(insertQuery, [username, hashedPassword], (err) => {
-      if (err) return res.status(500).json({ error: 'Insert failed' });
-      res.status(201).json({ message: 'User registered successfully' });
-    });
-  });
-});
-
 app.post('/login', (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
@@ -85,15 +65,18 @@ app.post('/login', (req, res) => {
 });
 
 
-//Registration endpoint
+const bcrypt = require('bcrypt');
+const saltRounds = 10; // You can adjust this based on desired security/performance
+
+// Registration endpoint
 app.post('/register', (req, res) => {
     const { username, passkey, phone, email, regNum } = req.body;
 
     if (!username || !passkey) {
-        return res.status(400).json({ error: 'Username and password are required' }); //Checking fields aren't empty
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?'; //Ensures User dosen't exist with same details
+    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
     connection.query(checkQuery, [username], (err, results) => {
         if (err) {
             console.error('Check user error:', err);
@@ -104,16 +87,24 @@ app.post('/register', (req, res) => {
             return res.status(409).json({ error: 'User already exists' });
         }
 
-        const genID = getRandomInt(9999) //Generates random int
-
-        const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)'; //Creates User in 'login info' table
-        connection.query(insertQuery, [genID,username, passkey, phone, email, regNum], (err, result) => {
+        // Hash the password before storing
+        bcrypt.hash(passkey, saltRounds, (err, hashedPassword) => {
             if (err) {
-                console.error('Insert user error:', err);
-                return res.status(500).json({ error: 'Database insert failed' });
+                console.error('Password hashing error:', err);
+                return res.status(500).json({ error: 'Failed to process password' });
             }
 
-            res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
+            const genID = getRandomInt(9999);
+            const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)';
+            
+            connection.query(insertQuery, [genID, username, hashedPassword, phone, email, regNum], (err, result) => {
+                if (err) {
+                    console.error('Insert user error:', err);
+                    return res.status(500).json({ error: 'Database insert failed' });
+                }
+
+                res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
+            });
         });
     });
 });
