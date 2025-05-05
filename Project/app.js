@@ -64,8 +64,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-
-const bcrypt = require('bcrypt');
 const saltRounds = 10; // You can adjust this based on desired security/performance
 
 // Registration endpoint
