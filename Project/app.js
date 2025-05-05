@@ -3,9 +3,15 @@ const connection = require('./db'); //Importing the connection
 const path = require('path');
 const app = express();
 const nodemailer = require('nodemailer');
-
-
 const session = require('express-session');
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'chopseven@gmail.com',
+    pass: 'AIzaSyCMJ_Lg9XIhE__iSlQDGJsWN6-osFUez74' // Use an app password, NOT your real one
+  }
+});
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'strong-fallback-secret',
@@ -326,7 +332,45 @@ app.put('/api/requests/:id', (req, res) => {
 
 //============================ Notifications =================================================
 
+app.post('/api/notify', (req, res) => {
+  const { message } = req.body;
 
+  if (!message) {
+    return res.status(400).json({ success: false, error: 'Message content is required' });
+  }
+
+  const query = 'SELECT Email FROM logininfo WHERE Type = "driver"';
+
+  connection.query(query, async (err, results) => {
+    if (err) {
+      console.error('Database error while retrieving emails:', err);
+      return res.status(500).json({ success: false, error: 'Failed to fetch users' });
+    }
+
+    const emails = results.map(row => row.Email);
+    if (emails.length === 0) {
+      return res.json({ success: true, count: 0 });
+    }
+
+    // Prepare email sending
+    const sendEmailPromises = emails.map(email =>
+      transporter.sendMail({
+        from: '"ParkEase Admin" <your.email@gmail.com>',
+        to: email,
+        subject: 'Important Parking Notification',
+        text: message
+      }).catch(error => {
+        console.error(`Failed to send to ${email}:`, error);
+        return null;
+      })
+    );
+
+    const sendResults = await Promise.all(sendEmailPromises);
+    const successCount = sendResults.filter(r => r !== null).length;
+
+    res.json({ success: true, count: successCount });
+  });
+});
 
 
 
