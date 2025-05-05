@@ -51,16 +51,24 @@ window.addEventListener("DOMContentLoaded", () => {
     statusMessage.style.color = "black";
 
     try {
-      // In a real application, you would call your backend API here
-      // This is a simulation that would be replaced with actual API call
-      const response = await sendEmailNotification(message);
-      
-      if (response.success) {
-        statusMessage.textContent = `Notification sent successfully to ${response.count} users!`;
+      button.disabled = true;
+      button.textContent = "Sending...";
+    
+      const response = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // include session if needed
+        body: JSON.stringify({ message })
+      });
+    
+      const data = await response.json();
+    
+      if (response.ok && data.success) {
+        statusMessage.textContent = `Notification sent successfully to ${data.count} users!`;
         statusMessage.style.color = "green";
         textarea.value = "";
       } else {
-        statusMessage.textContent = "Failed to send some notifications";
+        statusMessage.textContent = data.error || "Failed to send some notifications";
         statusMessage.style.color = "orange";
       }
     } catch (error) {
