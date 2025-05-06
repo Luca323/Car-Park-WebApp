@@ -78,6 +78,20 @@ function getRandomInt(max) { //Simple rng algorithm for ID generation
     return Math.floor(Math.random() * max);
   }
 
+//============================ Brute force prevention for login ==============================
+const rateLimit = require('express-rate-limit');
+
+// Create a limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  message: {
+    error: 'Too many login attempts. Please try again after 15 minutes.'
+  },
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
@@ -147,25 +161,6 @@ app.post('/register', (req, res) => {
         });
     });
 });
-
-
-//============================ Brute force prevention for login ==============================
-const rateLimit = require('express-rate-limit');
-
-// Create a limiter for login attempts
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 5, 
-  message: {
-    error: 'Too many login attempts. Please try again after 15 minutes.'
-  },
-  standardHeaders: true, 
-  legacyHeaders: false, 
-});
-
-
-
-
 
 
 //============================ Admin Dashboard ===============================================
