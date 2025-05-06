@@ -22,6 +22,7 @@ app.use(session({
 
 const port = 8080;
 
+//================================== URLs ====================================================
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
@@ -64,7 +65,7 @@ app.get('/admindashboard', (req, res) => {
 
 app.use(express.json());
 
-//Serve login page
+//Serve dashboard
 app.use(express.static(path.join(__dirname, 'Public')));
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'dashboard.html'));
@@ -192,7 +193,7 @@ app.get('/api/spaces', (req, res) => {
   });
 
 
-//============================ Manage Carpark =================================================
+//============================ Manage Carparks =================================================
 
 app.put('/api/carparks/:id', (req, res) => {
     const { name, size } = req.body;
@@ -279,6 +280,46 @@ app.delete('/api/carparks/:id', (req, res) => {
 
         res.json({ message: 'Car park and related spaces deleted' });
     });
+});
+
+//============================ Manage Spaces ==================================================================
+
+app.get('/api/spaces', (req, res) => {
+  const { carparkId } = req.query;
+
+  if (!carparkId) {
+    return res.status(400).json({ error: 'carparkId is required' });
+  }
+
+  const query = 'SELECT * FROM Spaces WHERE CarparkID = ?';
+
+  connection.query(query, [carparkId], (err, results) => {
+    if (err) {
+      console.error('Failed to fetch spaces:', err);
+      return res.status(500).json({ error: 'Failed to fetch spaces' });
+    }
+    res.json(results);
+  });
+});
+
+app.put('/api/spaces/:id', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required' });
+  }
+
+  const query = 'UPDATE Spaces SET Status = ? WHERE SpaceID = ?';
+
+  connection.query(query, [status, id], (err, result) => {
+    if (err) {
+      console.error('Failed to update space:', err);
+      return res.status(500).json({ error: 'Failed to update space' });
+    }
+
+    res.json({ message: 'Space status updated' });
+  });
 });
 
 //============================ Book Parking & Handle requests =================================================

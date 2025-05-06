@@ -83,8 +83,8 @@ fetch('/api/carparks')
   .catch(err => console.error("Failed to load car parks:", err));
 
   async function fetchSpaces(carparkId) {
-  const res = await fetch(`/api/spaces?carparkId=${carparkId}`);
-  return await res.json();
+    const res = await fetch(`/api/spaces?carparkId=${carparkId}`);
+    return await res.json();
   };
 
   // Adds available car parks to the car park dropdown
@@ -117,34 +117,62 @@ fetch('/api/carparks')
       return;
     }
   
+    console.log("Fetched spaces:", spaces);
     // Render spaces
     spaces.forEach(space => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${space.SpaceID}</strong> — ${space.Status.toUpperCase()}
-        ${space.Status === "blocked" && space.Reason ? `(Reason: ${space.Reason})` : ""}
+        <strong>${space.SpaceID}</strong> — ${space.Status}
         <br/>
       `;
-  
+    
       const blockBtn = document.createElement("button");
       blockBtn.textContent = "Block";
-      blockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "blocked", reasonInput.value.trim() || "unspecified");
-  
+      blockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "Blocked"); // Capitalized to match ENUM
+    
       const unblockBtn = document.createElement("button");
       unblockBtn.textContent = "Unblock";
-      unblockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "available");
-  
+      unblockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "Available");
+    
       li.appendChild(blockBtn);
       li.appendChild(unblockBtn);
       spaceList.appendChild(li);
     });
   }
 
+  async function updateSpaceStatus(spaceId, status) {
+    const res = await fetch(`/api/spaces/${spaceId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+  
+    if (res.ok) {
+      renderSpaces(carParkSelect.value, filterSelect.value);
+    } else {
+      const data = await res.json();
+      alert("Failed to update space: " + (data.error || "Unknown error"));
+    }
+  }
+
   // Saves updates spaces to local storage and refreshes space list (needs to be db)
-  function updateStorageAndRerender() {
-    localStorage.setItem("spaces", JSON.stringify(allSpaces));
-    renderSpaces(carParkSelect.value, filterSelect.value);
-    reasonInput.value = "";
+  async function updateAndRerender(spaceId, newStatus) {
+    try {
+      const res = await fetch(`/api/spaces/${spaceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+  
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Failed to update space: " + (data.error || "Unknown error"));
+      }
+  
+      await renderSpaces(carParkSelect.value, filterSelect.value);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
   }
 
   // Event listeners for dropdowns & search input
