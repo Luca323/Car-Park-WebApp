@@ -83,7 +83,7 @@ fetch('/api/carparks')
   .catch(err => console.error("Failed to load car parks:", err));
 
   async function fetchSpaces(carparkId) {
-    const res = await fetch(`/api/spaces?carparkId=${carparkId}`);
+    const res = await fetch(`/api/spaces1?carparkId=${carparkId}`);
     return await res.json();
   };
 
@@ -101,10 +101,11 @@ fetch('/api/carparks')
   
     let spaces = await fetchSpaces(carParkId);
   
+    
     // Filter by status
     if (filterStatus !== "all") {
       spaces = spaces.filter(s => s.Status === filterStatus);
-    }
+    } 
   
     // Search
     const searchText = searchInput.value.trim().toLowerCase();
@@ -117,7 +118,6 @@ fetch('/api/carparks')
       return;
     }
   
-    console.log("Fetched spaces:", spaces);
     // Render spaces
     spaces.forEach(space => {
       const li = document.createElement("li");

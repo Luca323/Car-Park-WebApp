@@ -284,20 +284,33 @@ app.delete('/api/carparks/:id', (req, res) => {
 
 //============================ Manage Spaces ==================================================================
 
-app.get('/api/spaces', (req, res) => {
+app.get('/api/spaces1', (req, res) => {
   const { carparkId } = req.query;
 
   if (!carparkId) {
     return res.status(400).json({ error: 'carparkId is required' });
   }
 
-  const query = 'SELECT * FROM Spaces WHERE CarparkID = ?';
+  const query = `
+    SELECT 
+      Spaces.SpaceID,
+      Spaces.CarparkID,
+      Carparks.Name AS CarparkName,
+      Spaces.Price,
+      Spaces.Occupied,
+      Spaces.UserID,
+      Spaces.Status
+    FROM Spaces
+    JOIN Carparks ON Spaces.CarparkID = Carparks.CarparkID
+    WHERE Spaces.CarparkID = ?
+  `;
 
   connection.query(query, [carparkId], (err, results) => {
     if (err) {
       console.error('Failed to fetch spaces:', err);
       return res.status(500).json({ error: 'Failed to fetch spaces' });
     }
+
     res.json(results);
   });
 });
