@@ -81,7 +81,7 @@ function getRandomInt(max) { //Simple rng algorithm for ID generation
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
-app.post('/login', (req, res) => {
+app.post('/login', loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
     return res.status(400).json({ error: 'Username and password required' });
@@ -104,7 +104,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-const saltRounds = 10; // You can adjust this based on desired security/performance
+const saltRounds = 10; 
 
 // Registration endpoint
 app.post('/register', (req, res) => {
@@ -146,6 +146,26 @@ app.post('/register', (req, res) => {
         });
     });
 });
+
+
+//============================ Brute force prevention for login ==============================
+const rateLimit = require('express-rate-limit');
+
+// Create a limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  message: {
+    error: 'Too many login attempts. Please try again after 15 minutes.'
+  },
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+
+
+
+
+
 
 //============================ Admin Dashboard ===============================================
 
