@@ -86,6 +86,7 @@ app.post('/login', loginLimiter, (req, res) => {
   if (!username || !passkey) {
     return res.status(400).json({ error: 'Username and password required' });
   }
+  
 
   const query = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
   connection.query(query, [username], async (err, results) => {
