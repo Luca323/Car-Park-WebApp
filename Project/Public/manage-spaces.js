@@ -67,8 +67,25 @@ window.addEventListener("DOMContentLoaded", () => {
   document.body.appendChild(container);
 
   // Loads car parks & spaces from local storage (needs to be DB)
-  const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
-  let allSpaces = JSON.parse(localStorage.getItem("spaces")) || [];
+  let carParks = [];
+
+fetch('/api/carparks')
+  .then(res => res.json())
+  .then(data => {
+    carParks = data;
+    data.forEach(park => {
+      const option = document.createElement("option");
+      option.value = park.CarparkID;
+      option.textContent = park.Name;
+      carParkSelect.appendChild(option);
+    });
+  })
+  .catch(err => console.error("Failed to load car parks:", err));
+
+  async function fetchSpaces(carparkId) {
+  const res = await fetch(`/api/spaces?carparkId=${carparkId}`);
+  return await res.json();
+  };
 
   // Adds available car parks to the car park dropdown
   carParks.forEach(park => {
@@ -79,53 +96,44 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // Function to render space list based on selected car park & filters
-  function renderSpaces(carParkName, filterStatus = "all") {
+  async function renderSpaces(carParkId, filterStatus = "all") {
     spaceList.innerHTML = "";
-    let spaces = allSpaces.filter(s => s.carPark === carParkName);
-
+  
+    let spaces = await fetchSpaces(carParkId);
+  
     // Filter by status
     if (filterStatus !== "all") {
-      spaces = spaces.filter(s => s.status === filterStatus);
+      spaces = spaces.filter(s => s.Status === filterStatus);
     }
-
-    // Filter by search input
+  
+    // Search
     const searchText = searchInput.value.trim().toLowerCase();
     if (searchText !== "") {
-      spaces = spaces.filter(s => s.id.toLowerCase().includes(searchText));
+      spaces = spaces.filter(s => s.SpaceID.toString().toLowerCase().includes(searchText));
     }
-
-    // No match with filters
+  
     if (spaces.length === 0) {
       spaceList.innerHTML = `<li>No spaces match these filters.</li>`;
       return;
     }
-
-    // Creates list items for each filtered space
+  
+    // Render spaces
     spaces.forEach(space => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${space.id}</strong> — ${space.status.toUpperCase()}
-        ${space.status === "blocked" && space.reason ? `(Reason: ${space.reason})` : ""}
+        <strong>${space.SpaceID}</strong> — ${space.Status.toUpperCase()}
+        ${space.Status === "blocked" && space.Reason ? `(Reason: ${space.Reason})` : ""}
         <br/>
       `;
-
-      // Buttons to block/unblock the space
+  
       const blockBtn = document.createElement("button");
       blockBtn.textContent = "Block";
-      blockBtn.onclick = () => {
-        space.status = "blocked";
-        space.reason = reasonInput.value.trim() || "unspecified";
-        updateStorageAndRerender();
-      };
-
+      blockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "blocked", reasonInput.value.trim() || "unspecified");
+  
       const unblockBtn = document.createElement("button");
       unblockBtn.textContent = "Unblock";
-      unblockBtn.onclick = () => {
-        space.status = "available";
-        delete space.reason;
-        updateStorageAndRerender();
-      };
-
+      unblockBtn.onclick = () => updateSpaceStatus(space.SpaceID, "available");
+  
       li.appendChild(blockBtn);
       li.appendChild(unblockBtn);
       spaceList.appendChild(li);

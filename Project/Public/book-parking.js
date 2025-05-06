@@ -52,7 +52,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Dropdown to select car park 
     const carParkSelect = document.createElement("select");
     carParkSelect.className = "event-input";
-    //const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+   
     const defaultOption = document.createElement("option");
     defaultOption.textContent = "Select a Car Park";
     defaultOption.disabled = true;
