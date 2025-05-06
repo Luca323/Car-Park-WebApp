@@ -170,7 +170,7 @@ app.get('/api/me', (req, res) => { //Simple reusable to retrieve userID
     res.json({ userID: req.session.UserID || null });
   });
 
-app.get('/api/spaces', (req, res) => {
+  app.get('/api/spaces', (req, res) => {
     const query = `
       SELECT 
         Spaces.SpaceID,
@@ -178,7 +178,8 @@ app.get('/api/spaces', (req, res) => {
         Carparks.Name AS CarparkName,
         Spaces.Price,
         Spaces.Occupied,
-        Spaces.UserID
+        Spaces.UserID,
+        Spaces.Status
       FROM Spaces
       JOIN Carparks ON Spaces.CarparkID = Carparks.CarparkID
     `;

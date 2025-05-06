@@ -36,6 +36,7 @@ window.addEventListener("DOMContentLoaded", () => {
   spaceListSection.className = "section";
   container.appendChild(spaceListSection);
 
+
   // Function that gets the current parking space stats 
   async function getStats() {
     try {
@@ -54,12 +55,22 @@ window.addEventListener("DOMContentLoaded", () => {
       console.log("Fetched spaces:", spaces);
   
       const total = spaces.length;
-      const available = spaces.filter(s => !s.Occupied && s.UserID === null).length;
-      const occupied = spaces.filter(s => s.Occupied && s.UserID !== null).length;
   
-      //Temporary placeholder
-      const reserved = 0;
-      const blocked = 0;
+      const available = spaces.filter(s =>
+        (s.Status === 'Available') && s.UserID === null
+      ).length;
+  
+      const occupied = spaces.filter(s =>
+        s.Status === 'Occupied' && s.UserID !== null
+      ).length;
+  
+      const reserved = spaces.filter(s =>
+        s.Status === 'Reserved'
+      ).length;
+  
+      const blocked = spaces.filter(s =>
+        s.Status === 'Blocked'
+      ).length;
   
       return { total, available, blocked, reserved, occupied, spaces };
     } catch (err) {
@@ -206,15 +217,17 @@ window.addEventListener("DOMContentLoaded", () => {
     const { spaces } = await getStats();
     spaceListSection.innerHTML = "<h2>Space List</h2>";
     const list = document.createElement("ul");
-
+  
     spaces.forEach(space => {
+      const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
+      
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${space.SpaceID}</strong> — ${space.CarparkName} — ${space.Occupied ? 'OCCUPIED' : 'AVAILABLE'}
+        <strong>Space ${space.SpaceID}</strong> — ${space.CarparkName} — <em>${status}</em>
       `;
       list.appendChild(li);
     });
-
+  
     spaceListSection.appendChild(list);
   }
 
