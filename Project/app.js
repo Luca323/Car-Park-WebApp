@@ -137,63 +137,65 @@ const saltRounds = 10;
 
 // Registration endpoint
 app.post('/register', (req, res) => {
-  const { username, passkey, phone, email, regNum } = req.body;
+    const { username, passkey, phone, email, regNum } = req.body;
 
-  if (!username || !passkey) {
-    return res.status(400).json({ error: 'Username and password are required' });
-  }
-
-  const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
-  connection.query(checkQuery, [username], (err, results) => {
-    if (err) {
-      console.error('Check user error:', err);
-      return res.status(500).json({ error: 'Database error' });
+    if (!username || !passkey) {
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    if (results.length > 0) {
-      return res.status(409).json({ error: 'User already exists' });
-    }
-
-    bcrypt.hash(passkey, saltRounds, (err, hashedPassword) => {
-      if (err) {
-        console.error('Password hashing error:', err);
-        return res.status(500).json({ error: 'Failed to process password' });
-      }
-
-      const genID = getRandomInt(9999);
-      const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)';
-
-      connection.query(insertQuery, [genID, username, hashedPassword, phone, email, regNum], (err, result) => {
+    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
+    connection.query(checkQuery, [username], (err, results) => {
         if (err) {
-          console.error('Insert user error:', err);
-          return res.status(500).json({ error: 'Database insert failed' });
+            console.error('Check user error:', err);
+            return res.status(500).json({ error: 'Database error' });
         }
 
-        // ---- Generate verification link and send email ----
-        const token = uuidv4();
-        pendingVerifications[token] = username;
+        if (results.length > 0) {
+            return res.status(409).json({ error: 'User already exists' });
+        }
 
-        const verificationLink = `http://localhost:${port}/verify-email?token=${token}`;
-        const mailOptions = {
-          from: '"ParkEase" <chopseven@gmail.com>',
-          to: email,
-          subject: 'Verify Your Email',
-          html: `<p>Welcome to ParkEase! Click <a href="${verificationLink}">here</a> to verify your email address.</p>`
-        };
+        // Hash the password before storing
+        bcrypt.hash(passkey, saltRounds, (err, hashedPassword) => {
+            if (err) {
+                console.error('Password hashing error:', err);
+                return res.status(500).json({ error: 'Failed to process password' });
+            }
 
-        transporter.sendMail(mailOptions, (err, info) => {
-          if (err) {
-            console.error('Error sending verification email:', err);
-            return res.status(500).json({ error: 'Failed to send verification email' });
-          }
+            const genID = getRandomInt(9999);
+            const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)';
+            
+            connection.query(insertQuery, [genID, username, hashedPassword, phone, email, regNum], (err, result) => {
+                if (err) {
+                    console.error('Insert user error:', err);
+                    return res.status(500).json({ error: 'Database insert failed' });
+                }
 
-          res.status(201).json({
-            message: 'Account created. Please check your email to verify your account before logging in.'
-          });
+                const token = uuidv4();
+                pendingVerifications[token] = username;
+
+                const verificationLink = `http://localhost:${port}/verify-email?token=${token}`;
+
+                const mailOptions = {
+                  from: '"ParkEase" <chopseven@gmail.com>',
+                  to: email,
+                  subject: 'Verify Your Email',
+                    html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`
+                };
+
+                transporter.sendMail(mailOptions, (err, info) => {
+                  if (err) {
+                  console.error('Error sending verification email:', err);
+                  return res.status(500).json({ error: 'Failed to send verification email' });
+                 }
+
+                res.status(201).json({
+                message: 'User registered. Please verify your email before logging in.'
+              });
+            });
+
+            });
         });
-      });
     });
-  });
 });
 
 //=========================== Verify Emails ==========================================
