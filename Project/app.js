@@ -107,11 +107,11 @@ app.post('/login', loginLimiter, (req, res) => {
   }
   
 
-  const query = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
+  const query = 'SELECT UserID, Passkey, Type, Verified FROM logininfo WHERE Username = ?';
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
-    if (results[0].Verified !== 1) {
+    if (Number(results[0].Verified) !== 1) {
       return res.status(403).json({ error: 'Please verify your email before logging in' });
     }
     
