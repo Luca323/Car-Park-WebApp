@@ -85,7 +85,7 @@ function getRandomInt(max) {
 
 //============================ Brute force prevention for login ==============================
 const rateLimit = require('express-rate-limit');
-/*
+
 // Create a limiter for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -96,7 +96,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true, 
   legacyHeaders: false, 
 });
-*/
+
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
