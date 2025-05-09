@@ -84,8 +84,8 @@ function getRandomInt(max) {
   }
 
 //============================ Brute force prevention for login ==============================
-const rateLimit = require('express-rate-limit');
-
+//const rateLimit = require('express-rate-limit');
+/*
 // Create a limiter for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -96,7 +96,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true, 
   legacyHeaders: false, 
 });
-
+*/
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
@@ -107,7 +107,7 @@ app.post('/login', loginLimiter, (req, res) => {
   }
   
 
-  const query = 'SELECT UserID, Passkey, Type FROM logininfo WHERE Username = ?';
+  const query = 'SELECT UserID, Passkey, Type, isVerified FROM logininfo WHERE Username = ?';
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
@@ -120,9 +120,14 @@ app.post('/login', loginLimiter, (req, res) => {
     const match = await bcrypt.compare(passkey, storedHash);
 
     if (match) {
+      if (!results[0].isVerified) {
+        return res.status(403).json({ error: 'Please verify your email before logging in.' });
+      }
+    
       req.session.UserID = results[0].UserID;
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
-    } else {
+    }
+     else {
       return res.status(401).json({ error: 'Invalid login' });
     }
   });
