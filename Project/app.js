@@ -84,8 +84,8 @@ function getRandomInt(max) {
   }
 
 //============================ Brute force prevention for login ==============================
-//const rateLimit = require('express-rate-limit');
-/*
+const rateLimit = require('express-rate-limit');
+
 // Create a limiter for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -96,7 +96,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true, 
   legacyHeaders: false, 
 });
-*/
+
 //============================ Login/Register ================================================
 const bcrypt = require('bcrypt');
 
@@ -107,11 +107,11 @@ app.post('/login', loginLimiter, (req, res) => {
   }
   
 
-  const query = 'SELECT UserID, Passkey, Type, isVerified FROM logininfo WHERE Username = ?';
+  const query = 'SELECT * FROM logininfo WHERE Username = ?';
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
-    if (!results[0].Verified) {
+    if (results[0].Verified !== 1) {
       return res.status(403).json({ error: 'Please verify your email before logging in' });
     }
     
