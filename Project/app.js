@@ -1,5 +1,5 @@
 const express = require('express');
-const connection = require('./db'); //Importing the connection
+const connection = require('./db');
 const path = require('path');
 const app = express();
 const nodemailer = require('nodemailer');
@@ -9,15 +9,19 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'chopseven@gmail.com',
-    pass: 'bxqf vaim aucu qgyr' // Use an app password, NOT your real one
+    pass: 'bxqf vaim aucu qgyr' 
   }
 });
+
+const { v4: uuidv4 } = require('uuid');
+let pendingVerifications = {}; // { token: username }
+
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'strong-fallback-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Set to true if using HTTPS
+  cookie: { secure: false }
 }));
 
 const port = 8080;
@@ -75,7 +79,7 @@ app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
 
-function getRandomInt(max) { //Simple rng algorithm for ID generation
+function getRandomInt(max) { 
     return Math.floor(Math.random() * max);
   }
 
@@ -107,6 +111,10 @@ app.post('/login', loginLimiter, (req, res) => {
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
+    if (!results[0].Verified) {
+      return res.status(403).json({ error: 'Please verify your email before logging in' });
+    }
+    
 
     const storedHash = results[0].Passkey;
     const match = await bcrypt.compare(passkey, storedHash);
@@ -157,11 +165,55 @@ app.post('/register', (req, res) => {
                     return res.status(500).json({ error: 'Database insert failed' });
                 }
 
-                res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
+                const token = uuidv4();
+                pendingVerifications[token] = username;
+
+                const verificationLink = `http://localhost:${port}/verify-email?token=${token}`;
+
+                const mailOptions = {
+                  from: '"ParkEase" <chopseven@gmail.com>',
+                  to: email,
+                  subject: 'Verify Your Email',
+                    html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`
+                };
+
+                transporter.sendMail(mailOptions, (err, info) => {
+                  if (err) {
+                  console.error('Error sending verification email:', err);
+                  return res.status(500).json({ error: 'Failed to send verification email' });
+                 }
+
+                res.status(201).json({
+                message: 'User registered. Please verify your email before logging in.'
+              });
+            });
+
             });
         });
     });
 });
+
+//=========================== Verify Emails ==========================================
+app.get('/verify-email', (req, res) => {
+  const { token } = req.query;
+  const username = pendingVerifications[token];
+
+  if (!username) {
+    return res.status(400).send('Invalid or expired verification link');
+  }
+
+  const updateQuery = 'UPDATE logininfo SET Verified = TRUE WHERE Username = ?';
+  connection.query(updateQuery, [username], (err, result) => {
+    if (err) {
+      console.error('Verification DB error:', err);
+      return res.status(500).send('Internal server error');
+    }
+
+    delete pendingVerifications[token];
+    res.send('Email successfully verified! You can now log in.');
+  });
+});
+
 
 
 //============================ Admin Dashboard ===============================================
