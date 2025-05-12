@@ -50,6 +50,7 @@ window.addEventListener("DOMContentLoaded", () => {
     async function loadRequests() {
       const meRes = await fetch("/api/me");
       const { userID } = await meRes.json();
+      console.log("Logged-in user ID:", userID);
 
       const res = await fetch("/api/requests");
       const allRequests = await res.json();
@@ -79,7 +80,7 @@ window.addEventListener("DOMContentLoaded", () => {
       
           notifyBtn.onclick = async () => {
             const now = new Date().toISOString();
-            await fetch('api/requests/${request.id}', {
+            await fetch(`api/requests/${request.id}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ status: "completed", endDate: now }) 
@@ -95,7 +96,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // Add Locate Parking Space button - only for upcoming sessions
         const isUpcoming =
           request.status === "accepted" &&
-          new Date(r.startDate) > now;
+          new Date(request.startDate) > now;
       
         if (!showNotifyBtn && isUpcoming) {
           const locateBtn = document.createElement("button");
@@ -116,27 +117,29 @@ window.addEventListener("DOMContentLoaded", () => {
     async function renderSessions() {
         const now = new Date();
         const allRequests = await loadRequests();
+        console.log("ALL REQUESTS", allRequests);
       
         // Filters current sessions
         const current = allRequests.filter(r =>
-          r.status === "accepted" &&
+          r.status?.toLowerCase() === "accepted" &&
           new Date(r.startDate) <= now &&
           new Date(r.endDate) > now
         );
       
         // Filters upcoming accepted sessions
         const upcoming = allRequests.filter(r =>
-          r.status === "accepted" &&
+          r.status?.toLowerCase() === "accepted" &&
           new Date(r.startDate) > now
         );
+        console.log("Upcoming sessions:", upcoming);
       
         // Filters pending sessions
         const pending = allRequests.filter(r => r.status === "pending");
       
         // Filters past sessions 
         const past = allRequests.filter(r =>
-          r.status === "completed" ||
-          (r.status === "accepted" && new Date(r.endDate) <= now)
+          r.status?.toLowerCase() === "completed" ||
+          (r.status?.toLowerCase() === "accepted" && new Date(r.endDate) <= now)
         );
       
         past.sort((a, b) => {

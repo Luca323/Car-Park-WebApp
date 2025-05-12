@@ -165,10 +165,12 @@ window.addEventListener("DOMContentLoaded", () => {
         const acceptBtn = document.createElement("button");
         acceptBtn.textContent = "Accept";
         acceptBtn.onclick = async () => {
-          const available = spaces.filter(s => s.carPark === req.carPark && !s.Occupied && s.UserID === null);
+          const available = spaces.filter(s => s.CarparkName === req.carPark && 
+            s.Status === "Available" &&
+            s.UserID === null);
     
           if (available.length === 0) {
-            alert('No available spaces in ${req.carPark} to assign.');
+            alert(`No available spaces in ${req.carPark} to assign.`);
             return;
           }
         
@@ -179,6 +181,12 @@ window.addEventListener("DOMContentLoaded", () => {
             method: "PUT",
             headers: { "Content-Type": "application/json"},
             body: JSON.stringify({ status: "accepted", spaceId: assigned.SpaceID})
+          });
+
+          await fetch(`http://localhost:8080/api/spaces/${assigned.SpaceID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Reserved" })
           });
 
           alert("Request accepted and space reserved");
