@@ -52,6 +52,17 @@ CREATE TABLE Reservations(
     FOREIGN KEY (UserID) REFERENCES logininfo(UserID) ON DELETE CASCADE
 );
 
+CREATE TABLE Events(
+    EventID VARCHAR(20) PRIMARY KEY,
+    Title VARCHAR(30),
+    Start DATETIME NOT NULL,
+    End DATETIME NOT NULL,
+    CarparkID INTEGER NOT NULL,
+    ReservationID INTEGER NOT NULL,
+    FOREIGN KEY (CarparkID) REFERENCES Carparks (CarparkID) ON DELETE CASCADE,
+    FOREIGN KEY (ReservationID) REFERENCES Reservations (ReservationID) ON DELETE CASCADE
+);
+
 DELIMITER $$
 
 CREATE PROCEDURE create_spaces_for_carpark(IN parkId INT, IN numSpaces INT)

@@ -66,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
   container.appendChild(section);
   document.body.appendChild(container);
 
-  // Loads car parks & spaces from local storage (needs to be DB)
+  // Loads car parks from local storage (needs to be DB)
   let carParks = [];
 
 fetch('/api/carparks')

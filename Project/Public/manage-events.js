@@ -29,7 +29,21 @@ window.addEventListener("DOMContentLoaded", () => {
   carParkSelect.className = "event-input";
 
   // Loads car parks from local storage (needs to be DB)
-  const carParks = JSON.parse(localStorage.getItem("carParks")) || [];
+  let carParks = [];
+
+  fetch('/api/carparks')
+    .then(res => res.json())
+    .then(data => {
+      carParks = data;
+      data.forEach(park => {
+        const option = document.createElement("option");
+        option.value = park.CarparkID;
+        option.textContent = park.Name;
+        carParkSelect.appendChild(option);
+      });
+    })
+    .catch(err => console.error("Failed to load car parks:", err));
+  
   const defaultOption = document.createElement("option");
   defaultOption.textContent = "Select a Car Park";
   defaultOption.disabled = true;
