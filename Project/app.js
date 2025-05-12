@@ -26,46 +26,63 @@ app.use(session({
 
 const port = 8080;
 
+//====================== Function to check if user logged in ================================
+function requireLogin(req, res, next) {
+  if (req.session.UserID) {
+    return next();
+  }
+  res.status(401).sendFile(path.join(__dirname, 'Public', 'login.html'));
+}
+
+function requireAdmin(req, res, next) {
+  if (req.session.UserID && req.session.Type === 'admin') {
+    return next();
+  }
+  res.status(403).send("Access denied. Admins only.");
+}
+
+
 //================================== URLs ====================================================
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
 
-app.get('/contactus', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
-});
-
-app.get('/bookparking', (req, res) => {
+app.get('/bookparking', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'book-parking.html'));
 });
 
-app.get('/driverdashboard', (req, res) => {
+app.get('/driverdashboard', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'driver-dashboard.html'));
 });
 
-app.get('/managecarparks', (req, res) => {
+app.get('/contactus', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
+});
+
+app.get('/admindashboard', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
+});
+
+app.get('/managecarparks', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-carparks.html'));
 });
 
-app.get('/manageevents', (req, res) => {
+app.get('/managespaces', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+});
+
+app.get('/manageevents', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-events.html'));
 });
 
-app.get('/managespaces', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+app.get('/sendnotif', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
 });
 
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'register.html'));
 });
 
-app.get('/sendnotif', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
-});
-
-app.get('/admindashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
-});
 
 app.use(express.json());
 
@@ -103,7 +120,7 @@ const bcrypt = require('bcrypt');
 app.post('/login', loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
-    return res.status(400).json({ error: 'Username and password required' });
+    return res.status(400).json({ error: 'Username and password required' });  
   }
   
 
@@ -121,6 +138,7 @@ app.post('/login', loginLimiter, (req, res) => {
 
     if (match) {
       req.session.UserID = results[0].UserID;
+      req.session.Type = results[0].Type; 
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
     } else {
       return res.status(401).json({ error: 'Invalid login' });
