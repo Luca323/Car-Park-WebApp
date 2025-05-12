@@ -11,6 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="/managespaces">Manage Spaces</a>
     <a href="/manageevents">Manage Events</a>
     <a href="/sendnotif">Send Notifications</a>
+    <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
 
@@ -36,6 +37,26 @@ window.addEventListener("DOMContentLoaded", () => {
   spaceListSection.className = "section";
   container.appendChild(spaceListSection);
 
+
+  //Logout logic
+  const logoutLink = document.getElementById("logout-link");
+  logoutLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        location.href = "/";
+      } else {
+        alert("Failed to log out.");
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Error during logout.");
+    }
+  });
 
   // Function that gets the current parking space stats 
   async function getStats() {
@@ -81,36 +102,54 @@ window.addEventListener("DOMContentLoaded", () => {
 
   //Function to update the dashboard summary & breakdown info
   async function updateDashboard() {
-    const { total, available, blocked, reserved, occupied, spaces } = await getStats();
+    const [spacesRes, requestsRes] = await Promise.all([
+      fetch("/api/spaces"),
+      fetch("/api/requests")
+    ]);
   
-    summarySection.innerHTML = `
-      <h2>Space Summary</h2>
-      <ul>
-        <li><strong>Total:</strong> ${total}</li>
-        <li><strong>Available:</strong> ${available}</li>
-        <li><strong>Blocked:</strong> ${blocked}</li>
-        <li><strong>Reserved:</strong> ${reserved}</li>
-        <li><strong>Occupied:</strong> ${occupied}</li>
-      </ul>
-    `;
+    const spaces = await spacesRes.json();
+    const requests = await requestsRes.json();
+    const now = new Date();
   
-    // Breakdown by car park name
+    let available = 0, blocked = 0, reserved = 0, occupied = 0;
+    const total = spaces.length;
     const byCarPark = {};
-  
-    spaces.forEach(space => {
+
+    for (const space of spaces) {
       const name = `${space.CarparkName} (ID: ${space.CarparkID})`;
-  
+    
       if (!byCarPark[name]) {
         byCarPark[name] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
       }
-  
-      let status = 'available';
-      if (space.Occupied && space.UserID !== null) {
-        status = 'occupied';
+    
+      let status = space.Status;
+    
+      // Check if the space has an accepted, now-active session
+      const activeRequest = requests.find(r =>
+        r.spaceId === space.SpaceID &&
+        r.status === "accepted" &&
+        new Date(r.startDate) <= now &&
+        new Date(r.endDate) > now
+      );
+    
+      if (status === "Reserved" && activeRequest) {
+        status = "Occupied";
+    
+        await fetch(`/api/spaces/${space.SpaceID}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Occupied", userId: activeRequest.UserID })
+        });
       }
-  
-      byCarPark[name][status]++;
-    });
+    
+      switch (status) {
+        case "Available": available++; byCarPark[name].available++; break;
+        case "Blocked": blocked++; byCarPark[name].blocked++; break;
+        case "Reserved": reserved++; byCarPark[name].reserved++; break;
+        case "Occupied": occupied++; byCarPark[name].occupied++; break;
+      }
+    }
+
   
     breakdownSection.innerHTML = `<h2>Car Park Breakdown</h2>`;
     const ul = document.createElement("ul");
@@ -128,6 +167,16 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   
     breakdownSection.appendChild(ul);
+    summarySection.innerHTML = `
+      <h2>Space Summary</h2>
+      <ul>
+        <li><strong>Total:</strong> ${total}</li>
+        <li><strong>Available:</strong> ${available}</li>
+        <li><strong>Blocked:</strong> ${blocked}</li>
+        <li><strong>Reserved:</strong> ${reserved}</li>
+        <li><strong>Occupied:</strong> ${occupied}</li>
+      </ul>
+    `;
   }
 
 

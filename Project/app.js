@@ -72,7 +72,7 @@ app.use(express.json());
 //Serve dashboard
 app.use(express.static(path.join(__dirname, 'Public')));
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
 app.listen(port, () => {
@@ -97,7 +97,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false, 
 });
 
-//============================ Login/Register ================================================
+//============================ Login/Register/Logout ================================================
 const bcrypt = require('bcrypt');
 
 app.post('/login', loginLimiter, (req, res) => {
@@ -192,7 +192,14 @@ app.post('/register', (req, res) => {
         });
     });
 });
-
+//Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ error: 'Logout failed' });
+    res.clearCookie('connect.sid'); // default session cookie name
+    res.status(200).json({ message: 'Logged out' });
+  });
+});
 //=========================== Verify Emails ==========================================
 app.get('/verify-email', (req, res) => {
   const { token } = req.query;
@@ -376,9 +383,9 @@ app.put('/api/spaces/:id', (req, res) => {
     return res.status(400).json({ error: 'Status is required' });
   }
 
-  const query = 'UPDATE Spaces SET Status = ? WHERE SpaceID = ?';
+  const query = 'UPDATE Spaces SET Status = ?, UserID = ? WHERE SpaceID = ?';
 
-  connection.query(query, [status, id], (err, result) => {
+  connection.query(query, [status, userId, id], (err, result) => {
     if (err) {
       console.error('Failed to update space:', err);
       return res.status(500).json({ error: 'Failed to update space' });
