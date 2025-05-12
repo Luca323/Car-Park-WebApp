@@ -77,7 +77,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/requests");
       const allRequests = await res.json();
 
-      return allRequests.filter(r => r.UserID === userID);
+      return allRequests.filter(r => r.userID === userID);
+      console.log("Filtered requests for userID", userID, ":", allRequests); //temp
     }
   
     // Building the UI element for each parking session
@@ -145,6 +146,7 @@ window.addEventListener("DOMContentLoaded", () => {
     async function renderSessions() {
         const now = new Date();
         const allRequests = await loadRequests();
+        window.allRequests = allRequests;
         console.log("ALL REQUESTS", allRequests);
       
         // Filters current sessions

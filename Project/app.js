@@ -75,6 +75,14 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
+app.get('/api/me', (req, res) => {
+  if (req.session && req.session.UserID) {
+    res.json({ userID: req.session.UserID });
+  } else {
+    res.json({ userID: null });
+  }
+});
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
@@ -225,33 +233,62 @@ app.get('/verify-email', (req, res) => {
 
 //============================ Admin Dashboard ===============================================
 
-app.get('/api/me', (req, res) => { //Simple reusable to retrieve userID
-    res.json({ userID: req.session.UserID || null });
-  });
+app.get('/api/spaces', (req, res) => {
+  const query = `
+    SELECT 
+      Spaces.SpaceID,
+      Spaces.CarparkID,
+      Carparks.Name AS CarparkName,
+      Spaces.Price,
+      Spaces.Occupied,
+      Spaces.UserID,
+      Spaces.Status
+    FROM Spaces
+    JOIN Carparks ON Spaces.CarparkID = Carparks.CarparkID
+  `;
 
-  app.get('/api/spaces', (req, res) => {
-    const query = `
-      SELECT 
-        Spaces.SpaceID,
-        Spaces.CarparkID,
-        Carparks.Name AS CarparkName,
-        Spaces.Price,
-        Spaces.Occupied,
-        Spaces.UserID,
-        Spaces.Status
-      FROM Spaces
-      JOIN Carparks ON Spaces.CarparkID = Carparks.CarparkID
-    `;
-  
-    connection.query(query, (err, results) => {
-      if (err) {
-        console.error('Error fetching spaces with carpark names:', err);
-        return res.status(500).json({ error: 'Failed to fetch space data' });
-      }
-      res.json(results);
-    });
-  });
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching spaces with carpark names:', err);
+      return res.status(500).json({ error: 'Failed to fetch space data' });
+    }
 
+    res.json(results);
+  });
+});
+
+app.post('/api/cleanup-expired', (req, res) => {
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  const autoFreeQuery = `
+    UPDATE Spaces s
+    JOIN Requests r ON s.SpaceID = r.SpaceID
+    SET s.Status = 'Available', s.UserID = NULL
+    WHERE r.status = 'accepted' AND r.End <= ?
+  `;
+
+  const markCompletedRequests = `
+    UPDATE Requests
+    SET status = 'completed'
+    WHERE status = 'accepted' AND End <= ?
+  `;
+
+  connection.query(autoFreeQuery, [now], err => {
+    if (err) {
+      console.error("Auto-cleanup error:", err);
+      return res.status(500).json({ error: "Auto cleanup failed" });
+    }
+
+  connection.query(markCompletedRequests, [now], (err2) => {
+    if (err2) {
+      console.error("Request update error:", err2);
+      return res.status(500).json({ error: "Request status update failed" });
+    }
+
+    res.json({ message: "Cleanup complete" });
+  });
+});
+});
 
 //============================ Manage Carparks =================================================
 
@@ -430,7 +467,7 @@ app.get('/api/requests', (req, res) => {
     SELECT
       r.ReqID AS id,
       r.CarParkID,
-      r.UserID,
+      r.UserID AS userID,
       r.Start AS startDate,
       r.End AS endDate,
       r.Cost AS cost,

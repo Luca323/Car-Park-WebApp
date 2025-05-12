@@ -102,6 +102,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   //Function to update the dashboard summary & breakdown info
   async function updateDashboard() {
+    await fetch("/api/cleanup-expired", { method: "POST" });
     const [spacesRes, requestsRes] = await Promise.all([
       fetch("/api/spaces"),
       fetch("/api/requests")
