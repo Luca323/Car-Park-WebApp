@@ -98,83 +98,101 @@ window.addEventListener("DOMContentLoaded", () => {
 
   container.appendChild(section);
 
-  // Functions to load & save events to local storage (needs to be DB)
-  function loadEvents() {
-    return JSON.parse(localStorage.getItem("events")) || [];
+  async function loadEvents() {
+    const res = await fetch('/api/events');
+    return await res.json();
   }
-
-  function saveEvents(events) {
-    localStorage.setItem("events", JSON.stringify(events));
+  
+  async function saveEvent({ title, startDate, endDate, carParkId, userId, reservedSpaces }) {
+    const event = {
+      EventID: `event-${Date.now()}`,
+      Title: title,
+      Start: startDate,
+      End: endDate,
+      CarparkID: carParkId,
+      UserID: userId,
+      reservedSpaces: reservedSpaces
+    };
+  
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    });
+  
+    return await res.json();
   }
 
   // Function to render a list of scheduled events
-  function renderEvents() {
-    const events = loadEvents();
+  async function renderEvents() {
+    const events = await loadEvents();
     eventList.innerHTML = "";
-
+  
     if (events.length === 0) {
       eventList.innerHTML = "<li>No events scheduled.</li>";
       return;
     }
-
-    events.forEach((ev, index) => {
+  
+    events.forEach(ev => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${ev.title}</strong><br>
-        <em>${ev.carPark}</em><br>
-        ${new Date(ev.date).toLocaleString()} → ${new Date(ev.endDate).toLocaleString()}<br>
-        ${ev.note}<br>
-        ${ev.reservedSpaces ? `🔒 ${ev.reservedSpaces} spaces reserved` : ""}
-        <br>
+        <strong>${ev.Title}</strong><br>
+        <em>${ev.CarparkName}</em><br>
+        ${new Date(ev.Start).toLocaleString()} → ${new Date(ev.End).toLocaleString()}<br>
+        Reservation ID: ${ev.ReservationID}
       `;
-
-      // Button to delete an event
+  
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
-      delBtn.onclick = () => {
-        const updated = loadEvents();
-        updated.splice(index, 1);
-        saveEvents(updated);
+      delBtn.onclick = async () => {
+        await deleteEvent(ev.EventID);
         renderEvents();
       };
-
+  
       li.appendChild(delBtn);
       eventList.appendChild(li);
     });
   }
 
+  async function getLoggedInUserId() {
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    console.log(data.UserID);
+    return data.UserID;
+  }
+
   // Handles form submission 
-  addBtn.onclick = () => {
+  addBtn.onclick = async () => {
     const title = titleInput.value.trim();
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
-    const note = noteInput.value.trim();
-    const carPark = carParkSelect.value;
+    const carParkId = carParkSelect.value;
     const reservedSpaces = parseInt(reserveInput.value, 10);
-
-    if (!title || !startDate || !endDate || !carPark) {
-      alert("Please fill in all required fields including start and end date/time.");
+    const userId = getLoggedInUserId(); // assume you have this from session or context
+  
+    if (!title || !startDate || !endDate || !carParkId || isNaN(reservedSpaces)) {
+      alert("Please fill in all required fields.");
       return;
     }
-
-    // Creates the event object
-    const newEvent = {
-      id: `event-${Date.now()}`,
+  
+    const result = await saveEvent({
       title,
-      date: startDate,
+      startDate,
       endDate,
-      carPark,
-      note,
-      reservedSpaces: isNaN(reservedSpaces) ? 0 : reservedSpaces
-    };
-
-    // Saves the event
-    const events = loadEvents();
-    events.push(newEvent);
-    saveEvents(events);
-    renderEvents();
-
-    // Resets form fields
+      carParkId,
+      userId,
+      reservedSpaces
+    });
+  
+    if (result.message) {
+      alert(result.message);
+      renderEvents(); // refresh the list
+    } else {
+      alert("Failed to create event.");
+      console.error(result);
+    }
+  
+    // Reset form fields
     titleInput.value = "";
     startDateInput.value = "";
     endDateInput.value = "";
@@ -185,4 +203,5 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Initial render of any existing events
   renderEvents();
+  
 });

@@ -533,6 +533,111 @@ app.post('/api/notify', (req, res) => {
   });
 });
 
+//======================================= Event-Based Parking ============================================
 
+app.get('/api/events', (req, res) => {
+  const query = `
+    SELECT Events.EventID, Events.Title, Events.Start, Events.End,
+           Carparks.Name AS CarparkName, Events.CarparkID, Events.ReservationID
+    FROM Events
+    JOIN Carparks ON Events.CarparkID = Carparks.CarparkID
+  `;
+  connection.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch events' });
+    res.json(results);
+  });
+});
+
+app.post('/api/events', (req, res) => {
+  const { EventID, Title, Start, End, CarparkID, UserID, reservedSpaces } = req.body;
+
+  if (!EventID || !Title || !Start || !End || !CarparkID || !UserID || !reservedSpaces) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const startDate = Start.split('T')[0];        // e.g. 2025-05-12
+  const arrivalTime = Start.split('T')[1];      // e.g. 14:00:00
+  const departureTime = End.split('T')[1];
+
+  const findSpacesQuery = `
+    SELECT SpaceID FROM Spaces
+    WHERE CarparkID = ? AND Status = 'Available'
+    LIMIT ?
+  `;
+
+  connection.query(findSpacesQuery, [CarparkID, reservedSpaces], (err, spaces) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error during space search' });
+    }
+
+    if (!spaces || spaces.length < reservedSpaces) {
+      return res.status(400).json({ error: 'Not enough available spaces' });
+    }
+
+    const reservations = [];
+    let completed = 0;
+    let responseSent = false;
+
+    spaces.forEach(space => {
+      const spaceId = space.SpaceID;
+
+      const insertReservation = `
+        INSERT INTO Reservations (UserID, SpaceID, startDate, Arrival, Departure)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      connection.query(insertReservation, [UserID, spaceId, startDate, arrivalTime, departureTime], (err, result) => {
+        if (responseSent) return;
+        if (err) {
+          responseSent = true;
+          return res.status(500).json({ error: 'Failed to create reservation' });
+        }
+
+        const updateSpace = `UPDATE Spaces SET Status = 'Reserved' WHERE SpaceID = ?`;
+        connection.query(updateSpace, [spaceId], err2 => {
+          if (responseSent) return;
+          if (err2) {
+            responseSent = true;
+            return res.status(500).json({ error: 'Failed to update space status' });
+          }
+
+          reservations.push(result.insertId);
+          completed++;
+
+          if (completed === reservedSpaces) {
+            const reservationIdForEvent = reservations[0];
+
+            const insertEvent = `
+              INSERT INTO Events (EventID, Title, \`Start\`, \`End\`, CarparkID, ReservationID)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `;
+
+            connection.query(insertEvent, [EventID, Title, Start, End, CarparkID, reservationIdForEvent], err3 => {
+              if (responseSent) return;
+              if (err3) {
+                responseSent = true;
+                return res.status(500).json({ error: 'Failed to create event' });
+              }
+
+              responseSent = true;
+              return res.status(201).json({
+                message: 'Event and all reservations created successfully',
+                reservedCount: reservations.length
+              });
+            });
+          }
+        });
+      });
+    });
+  });
+});
+
+app.delete('/api/events/:id', (req, res) => {
+  const query = `DELETE FROM Events WHERE EventID = ?`;
+  connection.query(query, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete event' });
+    res.json({ message: 'Event deleted successfully' });
+  });
+});
 
 
