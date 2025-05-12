@@ -610,88 +610,127 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-app.post('/api/events', (req, res) => {
+app.post('/api/events', async (req, res) => {
   const { EventID, Title, Start, End, CarparkID, UserID, reservedSpaces } = req.body;
 
+  // Input validation
   if (!EventID || !Title || !Start || !End || !CarparkID || !UserID || !reservedSpaces) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const startDate = Start.split('T')[0];        // e.g. 2025-05-12
-  const arrivalTime = Start.split('T')[1];      // e.g. 14:00:00
+  // Parse datetime components
+  const startDate = Start.split('T')[0];
+  const arrivalTime = Start.split('T')[1];
   const departureTime = End.split('T')[1];
 
-  const findSpacesQuery = `
-    SELECT SpaceID FROM Spaces
-    WHERE CarparkID = ? AND Status = 'Available'
-    LIMIT ?
-  `;
+  try {
+    // Start transaction
+    await new Promise((resolve, reject) => {
+      connection.beginTransaction(err => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
-  connection.query(findSpacesQuery, [CarparkID, reservedSpaces], (err, spaces) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error during space search' });
-    }
+    // Find available spaces - using callback style
+    const spaces = await new Promise((resolve, reject) => {
+      connection.query(
+        `SELECT SpaceID FROM Spaces 
+         WHERE CarparkID = ? AND Status = 'Available' 
+         LIMIT ?`,
+        [CarparkID, reservedSpaces],
+        (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        }
+      );
+    });
 
     if (!spaces || spaces.length < reservedSpaces) {
+      await new Promise((resolve, reject) => {
+        connection.rollback(err => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
       return res.status(400).json({ error: 'Not enough available spaces' });
     }
 
-    const reservations = [];
-    let completed = 0;
-    let responseSent = false;
+    // Create reservations
+    const reservationIds = [];
+    for (const space of spaces) {
+      const reservationResult = await new Promise((resolve, reject) => {
+        connection.query(
+          `INSERT INTO Reservations (UserID, SpaceID, startDate, Arrival, Departure)
+           VALUES (?, ?, ?, ?, ?)`,
+          [UserID, space.SpaceID, startDate, arrivalTime, departureTime],
+          (err, results) => {
+            if (err) return reject(err);
+            resolve(results);
+          }
+        );
+      });
 
-    spaces.forEach(space => {
-      const spaceId = space.SpaceID;
+      reservationIds.push(reservationResult.insertId);
 
-      const insertReservation = `
-        INSERT INTO Reservations (UserID, SpaceID, startDate, Arrival, Departure)
-        VALUES (?, ?, ?, ?, ?)
-      `;
+      await new Promise((resolve, reject) => {
+        connection.query(
+          `UPDATE Spaces SET Status = 'Reserved' WHERE SpaceID = ?`,
+          [space.SpaceID],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+    }
 
-      connection.query(insertReservation, [UserID, spaceId, startDate, arrivalTime, departureTime], (err, result) => {
-        if (responseSent) return;
-        if (err) {
-          responseSent = true;
-          return res.status(500).json({ error: 'Failed to create reservation' });
+    // Create event (using first reservation ID)
+    await new Promise((resolve, reject) => {
+      connection.query(
+        `INSERT INTO Events (EventID, Title, \`Start\`, \`End\`, CarparkID, ReservationID)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [EventID, Title, Start, End, CarparkID, reservationIds[0]],
+        (err) => {
+          if (err) return reject(err);
+          resolve();
         }
+      );
+    });
 
-        const updateSpace = `UPDATE Spaces SET Status = 'Reserved' WHERE SpaceID = ?`;
-        connection.query(updateSpace, [spaceId], err2 => {
-          if (responseSent) return;
-          if (err2) {
-            responseSent = true;
-            return res.status(500).json({ error: 'Failed to update space status' });
-          }
-
-          reservations.push(result.insertId);
-          completed++;
-
-          if (completed === reservedSpaces) {
-            const reservationIdForEvent = reservations[0];
-
-            const insertEvent = `
-              INSERT INTO Events (EventID, Title, \`Start\`, \`End\`, CarparkID, ReservationID)
-              VALUES (?, ?, ?, ?, ?, ?)
-            `;
-
-            connection.query(insertEvent, [EventID, Title, Start, End, CarparkID, reservationIdForEvent], err3 => {
-              if (responseSent) return;
-              if (err3) {
-                responseSent = true;
-                return res.status(500).json({ error: 'Failed to create event' });
-              }
-
-              responseSent = true;
-              return res.status(201).json({
-                message: 'Event and all reservations created successfully',
-                reservedCount: reservations.length
-              });
-            });
-          }
-        });
+    // Commit transaction
+    await new Promise((resolve, reject) => {
+      connection.commit(err => {
+        if (err) return reject(err);
+        resolve();
       });
     });
-  });
+    
+    return res.status(201).json({
+      message: 'Event and all reservations created successfully',
+      reservedCount: reservationIds.length
+    });
+
+  } catch (err) {
+    console.error('Error creating event:', err);
+    
+    // Attempt rollback
+    try {
+      await new Promise((resolve, reject) => {
+        connection.rollback(err => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+    } catch (rollbackErr) {
+      console.error('Rollback failed:', rollbackErr);
+    }
+    
+    return res.status(500).json({ 
+      error: 'Failed to create event and reservations',
+      details: err.message 
+    });
+  }
 });
 
 app.delete('/api/events/:id', (req, res) => {

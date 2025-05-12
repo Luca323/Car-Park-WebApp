@@ -157,8 +157,8 @@ window.addEventListener("DOMContentLoaded", () => {
   async function getLoggedInUserId() {
     const res = await fetch('/api/me');
     const data = await res.json();
-    console.log(data.UserID);
-    return data.UserID;
+    console.log('Logged-in UserID:', data.userID);
+    return data.userID;
   }
 
   // Handles form submission 
@@ -168,7 +168,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const endDate = endDateInput.value;
     const carParkId = carParkSelect.value;
     const reservedSpaces = parseInt(reserveInput.value, 10);
-    const userId = getLoggedInUserId(); // assume you have this from session or context
+    const userId = await getLoggedInUserId(); // ✅ await it!
   
     if (!title || !startDate || !endDate || !carParkId || isNaN(reservedSpaces)) {
       alert("Please fill in all required fields.");
