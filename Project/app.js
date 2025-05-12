@@ -26,46 +26,63 @@ app.use(session({
 
 const port = 8080;
 
+//====================== Function to check if user logged in ================================
+function requireLogin(req, res, next) {
+  if (req.session.UserID) {
+    return next();
+  }
+  res.status(401).sendFile(path.join(__dirname, 'Public', 'login.html'));
+}
+
+function requireAdmin(req, res, next) {
+  if (req.session.UserID && req.session.Type === 'admin') {
+    return next();
+  }
+  res.status(403).send("Access denied. Admins only.");
+}
+
+
 //================================== URLs ====================================================
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
 
-app.get('/contactus', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
-});
-
-app.get('/bookparking', (req, res) => {
+app.get('/bookparking', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'book-parking.html'));
 });
 
-app.get('/driverdashboard', (req, res) => {
+app.get('/driverdashboard', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'driver-dashboard.html'));
 });
 
-app.get('/managecarparks', (req, res) => {
+app.get('/contactus', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
+});
+
+app.get('/admindashboard', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
+});
+
+app.get('/managecarparks', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-carparks.html'));
 });
 
-app.get('/manageevents', (req, res) => {
+app.get('/managespaces', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+});
+
+app.get('/manageevents', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-events.html'));
 });
 
-app.get('/managespaces', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+app.get('/sendnotif', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
 });
 
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'register.html'));
 });
 
-app.get('/sendnotif', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
-});
-
-app.get('/admindashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
-});
 
 app.use(express.json());
 
@@ -111,7 +128,7 @@ const bcrypt = require('bcrypt');
 app.post('/login', loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
-    return res.status(400).json({ error: 'Username and password required' });
+    return res.status(400).json({ error: 'Username and password required' });  
   }
   
 
@@ -129,6 +146,7 @@ app.post('/login', loginLimiter, (req, res) => {
 
     if (match) {
       req.session.UserID = results[0].UserID;
+      req.session.Type = results[0].Type; 
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
     } else {
       return res.status(401).json({ error: 'Invalid login' });
@@ -577,6 +595,111 @@ app.post('/api/notify', (req, res) => {
   });
 });
 
+//======================================= Event-Based Parking ============================================
 
+app.get('/api/events', (req, res) => {
+  const query = `
+    SELECT Events.EventID, Events.Title, Events.Start, Events.End,
+           Carparks.Name AS CarparkName, Events.CarparkID, Events.ReservationID
+    FROM Events
+    JOIN Carparks ON Events.CarparkID = Carparks.CarparkID
+  `;
+  connection.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch events' });
+    res.json(results);
+  });
+});
+
+app.post('/api/events', (req, res) => {
+  const { EventID, Title, Start, End, CarparkID, UserID, reservedSpaces } = req.body;
+
+  if (!EventID || !Title || !Start || !End || !CarparkID || !UserID || !reservedSpaces) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const startDate = Start.split('T')[0];        // e.g. 2025-05-12
+  const arrivalTime = Start.split('T')[1];      // e.g. 14:00:00
+  const departureTime = End.split('T')[1];
+
+  const findSpacesQuery = `
+    SELECT SpaceID FROM Spaces
+    WHERE CarparkID = ? AND Status = 'Available'
+    LIMIT ?
+  `;
+
+  connection.query(findSpacesQuery, [CarparkID, reservedSpaces], (err, spaces) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error during space search' });
+    }
+
+    if (!spaces || spaces.length < reservedSpaces) {
+      return res.status(400).json({ error: 'Not enough available spaces' });
+    }
+
+    const reservations = [];
+    let completed = 0;
+    let responseSent = false;
+
+    spaces.forEach(space => {
+      const spaceId = space.SpaceID;
+
+      const insertReservation = `
+        INSERT INTO Reservations (UserID, SpaceID, startDate, Arrival, Departure)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      connection.query(insertReservation, [UserID, spaceId, startDate, arrivalTime, departureTime], (err, result) => {
+        if (responseSent) return;
+        if (err) {
+          responseSent = true;
+          return res.status(500).json({ error: 'Failed to create reservation' });
+        }
+
+        const updateSpace = `UPDATE Spaces SET Status = 'Reserved' WHERE SpaceID = ?`;
+        connection.query(updateSpace, [spaceId], err2 => {
+          if (responseSent) return;
+          if (err2) {
+            responseSent = true;
+            return res.status(500).json({ error: 'Failed to update space status' });
+          }
+
+          reservations.push(result.insertId);
+          completed++;
+
+          if (completed === reservedSpaces) {
+            const reservationIdForEvent = reservations[0];
+
+            const insertEvent = `
+              INSERT INTO Events (EventID, Title, \`Start\`, \`End\`, CarparkID, ReservationID)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `;
+
+            connection.query(insertEvent, [EventID, Title, Start, End, CarparkID, reservationIdForEvent], err3 => {
+              if (responseSent) return;
+              if (err3) {
+                responseSent = true;
+                return res.status(500).json({ error: 'Failed to create event' });
+              }
+
+              responseSent = true;
+              return res.status(201).json({
+                message: 'Event and all reservations created successfully',
+                reservedCount: reservations.length
+              });
+            });
+          }
+        });
+      });
+    });
+  });
+});
+
+app.delete('/api/events/:id', (req, res) => {
+  const query = `DELETE FROM Events WHERE EventID = ?`;
+  connection.query(query, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete event' });
+    res.json({ message: 'Event deleted successfully' });
+  });
+});
 
 
