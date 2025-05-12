@@ -93,20 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
         );
       });
 
-      //DEBUG
-      if (space.Status === "Reserved") {
-        console.log("Checking Reserved space", space.SpaceID);
-      
-        if (!activeRequest) {
-          console.log(" No active request matched for space", space.SpaceID);
-        } else {
-          console.log(" Matched active request:", activeRequest);
-        }
-      }
-      //DEBUG
-
       if (space.Status === "Reserved" && activeRequest) {
-        console.log("Promoting to Occupied: userId =", activeRequest.userID, "| typeof =", typeof activeRequest.userID); //DEBUG LINE
         await fetch(`/api/spaces/${space.SpaceID}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

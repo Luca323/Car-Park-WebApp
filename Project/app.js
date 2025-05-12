@@ -86,18 +86,6 @@ app.get('/register', (req, res) => {
 
 
 app.use(express.json());
-//DEBUG DELETE LATER - OPEN
-app.use((req, res, next) => {
-  console.log(`[DEBUG] ${req.method} ${req.url}`);
-  next();
-});
-
-app.put('/debug/spaces/:id', (req, res) => {
-  console.log("Debug route hit with:", req.body);
-  res.json({ message: "Debug route confirmed." });
-});
-//DEBUG DELETE LATER - CLOSE
-
 
 app.get('/api/me', (req, res) => {
   if (req.session && req.session.UserID) {
@@ -282,7 +270,6 @@ app.get('/api/spaces', (req, res) => {
 app.post('/api/cleanup-expired', (req, res) => {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-  console.log("[CLEANUP] Running cleanup-expired at", now); //debug
   const autoFreeQuery = `
     UPDATE Spaces s
     JOIN Requests r ON s.SpaceID = r.SpaceID
@@ -437,8 +424,6 @@ app.get('/api/spaces1', (req, res) => {
 });
 
 app.put('/api/spaces/:id', (req, res) => {
-  console.log("[DEBUG] PUT /api/spaces/:id route triggered");
-
   const { id } = req.params;
   let { status, userId } = req.body;
 
@@ -813,12 +798,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
-//debug delete later - open
-app.use((err, req, res, next) => {
-  console.error("[GLOBAL ERROR HANDLER]", err.stack);
-  res.status(500).send("Something broke");
-});
-//debug delete later - close
+
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
