@@ -1,4 +1,3 @@
-console.log("🚀 Running app.js from:", __filename);
 const express = require('express');
 const connection = require('./db');
 const path = require('path');
@@ -283,7 +282,6 @@ app.post('/api/cleanup-expired', (req, res) => {
     WHERE status = 'accepted' AND End <= ?
   `;
 
-  console.log("[CLEANUP] Attempting to free expired sessions...");
   connection.query(autoFreeQuery, [now], err => {
     if (err) {
       console.error("Auto-cleanup error:", err);
@@ -444,12 +442,9 @@ app.put('/api/spaces/:id', (req, res) => {
   const occupiedFlag = status === "Occupied" ? 1 : 0;
   const query = 'UPDATE Spaces SET Status = ?, UserID = ?, Occupied = ? WHERE SpaceID = ?';
 
-  console.log("Query to run:");
-  console.log("Status =", status, "| UserID =", userId, "| Occupied =", occupiedFlag, "| SpaceID =", id);
-
   connection.query(query, [status, userId, occupiedFlag, id], (err, result) => {
     if (err) {
-      console.log("[ERROR] Query failed!");
+      console.log("ERROR - Query failed");
       console.log("Raw error object:", err);
       try {
         console.log("Stringified:", JSON.stringify(err, null, 2));
@@ -459,7 +454,7 @@ app.put('/api/spaces/:id', (req, res) => {
       return res.status(500).json({ error: 'Failed to update space' });
     }
 
-    console.log("✅ Query succeeded.");
+    console.log("Query succeeded.");
     res.json({ message: 'Space status updated' });
   });
 });
