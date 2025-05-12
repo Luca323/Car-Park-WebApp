@@ -144,7 +144,7 @@ fetch('/api/carparks')
     const res = await fetch(`/api/spaces/${spaceId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, userId: null })
     });
   
     if (res.ok) {
@@ -161,7 +161,7 @@ fetch('/api/carparks')
       const res = await fetch(`/api/spaces/${spaceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus, userId: null })
       });
   
       if (!res.ok) {

@@ -9,6 +9,7 @@ window.addEventListener("DOMContentLoaded", () => {
       <a href="/driverdashboard">Dashboard</a>
       <a href="/bookparking">Book Parking</a>
       <a href="/contactus">Contact Us</a>
+      <a href="#" id="logout-link">Logout</a>
     `;
     document.body.appendChild(nav);
   
@@ -46,6 +47,27 @@ window.addEventListener("DOMContentLoaded", () => {
     pastSection.appendChild(pastList);
     container.appendChild(pastSection);
   
+
+    //Logout logic
+    const logoutLink = document.getElementById("logout-link");
+    logoutLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch("/logout", {
+          method: "POST",
+          credentials: "include"
+        });
+        if (res.ok) {
+          location.href = "/";
+        } else {
+          alert("Failed to log out.");
+        }
+      } catch (err) {
+        console.error("Logout error:", err);
+        alert("Error during logout.");
+      }
+    });
+
     // Loads all requests from DB
     async function loadRequests() {
       const meRes = await fetch("/api/me");
@@ -84,6 +106,12 @@ window.addEventListener("DOMContentLoaded", () => {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ status: "completed", endDate: now }) 
+            });
+
+            await fetch(`/api/spaces/${request.spaceId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: "Available", userId: null })
             });
             
             alert("Departure Recorded");

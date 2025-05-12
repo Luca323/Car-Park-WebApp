@@ -26,53 +26,70 @@ app.use(session({
 
 const port = 8080;
 
+//====================== Function to check if user logged in ================================
+function requireLogin(req, res, next) {
+  if (req.session.UserID) {
+    return next();
+  }
+  res.status(401).sendFile(path.join(__dirname, 'Public', 'login.html'));
+}
+
+function requireAdmin(req, res, next) {
+  if (req.session.UserID && req.session.Type === 'admin') {
+    return next();
+  }
+  res.status(403).send("Access denied. Admins only.");
+}
+
+
 //================================== URLs ====================================================
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
 
-app.get('/contactus', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
-});
-
-app.get('/bookparking', (req, res) => {
+app.get('/bookparking', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'book-parking.html'));
 });
 
-app.get('/driverdashboard', (req, res) => {
+app.get('/driverdashboard', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'driver-dashboard.html'));
 });
 
-app.get('/managecarparks', (req, res) => {
+app.get('/contactus', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'contact-us.html'));
+});
+
+app.get('/admindashboard', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
+});
+
+app.get('/managecarparks', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-carparks.html'));
 });
 
-app.get('/manageevents', (req, res) => {
+app.get('/managespaces', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+});
+
+app.get('/manageevents', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-events.html'));
 });
 
-app.get('/managespaces', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'manage-spaces.html'));
+app.get('/sendnotif', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
 });
 
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'register.html'));
 });
 
-app.get('/sendnotif', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'send-notif.html'));
-});
-
-app.get('/admindashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Public', 'admin-dashboard.html'));
-});
 
 app.use(express.json());
 
 //Serve dashboard
 app.use(express.static(path.join(__dirname, 'Public')));
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
 app.listen(port, () => {
@@ -88,7 +105,7 @@ const rateLimit = require('express-rate-limit');
 
 // Create a limiter for login attempts
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 1000, 
   max: 5, 
   message: {
     error: 'Too many login attempts. Please try again after 15 minutes.'
@@ -97,13 +114,13 @@ const loginLimiter = rateLimit({
   legacyHeaders: false, 
 });
 
-//============================ Login/Register ================================================
+//============================ Login/Register/Logout ================================================
 const bcrypt = require('bcrypt');
 
 app.post('/login', loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
-    return res.status(400).json({ error: 'Username and password required' });
+    return res.status(400).json({ error: 'Username and password required' });  
   }
   
 
@@ -121,6 +138,7 @@ app.post('/login', loginLimiter, (req, res) => {
 
     if (match) {
       req.session.UserID = results[0].UserID;
+      req.session.Type = results[0].Type; 
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
     } else {
       return res.status(401).json({ error: 'Invalid login' });
@@ -192,7 +210,14 @@ app.post('/register', (req, res) => {
         });
     });
 });
-
+//Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ error: 'Logout failed' });
+    res.clearCookie('connect.sid'); // default session cookie name
+    res.status(200).json({ message: 'Logged out' });
+  });
+});
 //=========================== Verify Emails ==========================================
 app.get('/verify-email', (req, res) => {
   const { token } = req.query;
@@ -370,15 +395,15 @@ app.get('/api/spaces1', (req, res) => {
 
 app.put('/api/spaces/:id', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, userId } = req.body;
 
   if (!status) {
     return res.status(400).json({ error: 'Status is required' });
   }
 
-  const query = 'UPDATE Spaces SET Status = ? WHERE SpaceID = ?';
+  const query = 'UPDATE Spaces SET Status = ?, UserID = ? WHERE SpaceID = ?';
 
-  connection.query(query, [status, id], (err, result) => {
+  connection.query(query, [status, userId, id], (err, result) => {
     if (err) {
       console.error('Failed to update space:', err);
       return res.status(500).json({ error: 'Failed to update space' });
