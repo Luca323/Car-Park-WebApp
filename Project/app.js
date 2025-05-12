@@ -1,3 +1,4 @@
+console.log("🚀 Running app.js from:", __filename);
 const express = require('express');
 const connection = require('./db');
 const path = require('path');
@@ -85,12 +86,18 @@ app.get('/register', (req, res) => {
 
 
 app.use(express.json());
-
-//Serve dashboard
-app.use(express.static(path.join(__dirname, 'Public')));
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
+//DEBUG DELETE LATER - OPEN
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.url}`);
+  next();
 });
+
+app.put('/debug/spaces/:id', (req, res) => {
+  console.log("Debug route hit with:", req.body);
+  res.json({ message: "Debug route confirmed." });
+});
+//DEBUG DELETE LATER - CLOSE
+
 
 app.get('/api/me', (req, res) => {
   if (req.session && req.session.UserID) {
@@ -100,9 +107,6 @@ app.get('/api/me', (req, res) => {
   }
 });
 
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});
 
 function getRandomInt(max) { 
     return Math.floor(Math.random() * max);
@@ -278,6 +282,7 @@ app.get('/api/spaces', (req, res) => {
 app.post('/api/cleanup-expired', (req, res) => {
   const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+  console.log("[CLEANUP] Running cleanup-expired at", now); //debug
   const autoFreeQuery = `
     UPDATE Spaces s
     JOIN Requests r ON s.SpaceID = r.SpaceID
@@ -291,6 +296,7 @@ app.post('/api/cleanup-expired', (req, res) => {
     WHERE status = 'accepted' AND End <= ?
   `;
 
+  console.log("[CLEANUP] Attempting to free expired sessions...");
   connection.query(autoFreeQuery, [now], err => {
     if (err) {
       console.error("Auto-cleanup error:", err);
@@ -431,21 +437,44 @@ app.get('/api/spaces1', (req, res) => {
 });
 
 app.put('/api/spaces/:id', (req, res) => {
+  console.log("[DEBUG] PUT /api/spaces/:id route triggered");
+
   const { id } = req.params;
-  const { status, userId } = req.body;
+  let { status, userId } = req.body;
 
   if (!status) {
+    console.log("Missing status");
     return res.status(400).json({ error: 'Status is required' });
   }
 
-  const query = 'UPDATE Spaces SET Status = ?, UserID = ? WHERE SpaceID = ?';
+  if (status === "Occupied") {
+    if (!userId || isNaN(Number(userId))) {
+      console.log("Invalid userId for Occupied status:", userId);
+      return res.status(400).json({ error: 'Occupied status must include a valid userId' });
+    }
+  } else {
+    userId = null;
+  }
 
-  connection.query(query, [status, userId, id], (err, result) => {
+  const occupiedFlag = status === "Occupied" ? 1 : 0;
+  const query = 'UPDATE Spaces SET Status = ?, UserID = ?, Occupied = ? WHERE SpaceID = ?';
+
+  console.log("Query to run:");
+  console.log("Status =", status, "| UserID =", userId, "| Occupied =", occupiedFlag, "| SpaceID =", id);
+
+  connection.query(query, [status, userId, occupiedFlag, id], (err, result) => {
     if (err) {
-      console.error('Failed to update space:', err);
+      console.log("[ERROR] Query failed!");
+      console.log("Raw error object:", err);
+      try {
+        console.log("Stringified:", JSON.stringify(err, null, 2));
+      } catch (e) {
+        console.log("Could not stringify:", e.message);
+      }
       return res.status(500).json({ error: 'Failed to update space' });
     }
 
+    console.log("✅ Query succeeded.");
     res.json({ message: 'Space status updated' });
   });
 });
@@ -550,6 +579,43 @@ app.put('/api/requests/:id', (req, res) => {
       return res.status(500).json({ error: "Failed to update request"});
     }
     res.json({ message: "Request updated successfully"});
+  });
+});
+
+app.post('/api/requests/:id/departure', (req, res) => {
+  const requestId = req.params.id;
+
+  const findQuery = `
+    SELECT SpaceID FROM Requests
+    WHERE ReqID = ? AND status = 'accepted'
+  `;
+
+  connection.query(findQuery, [requestId], (err, results) => {
+    if (err || results.length === 0) {
+      console.error("Departure error:", err || "No such accepted request");
+      return res.status(400).json({ error: "Invalid request ID or not accepted" });
+    }
+
+    const spaceId = results[0].SpaceID;
+
+    const completeRequest = `UPDATE Requests SET status = 'completed' WHERE ReqID = ?`;
+    const freeSpace = `UPDATE Spaces SET Status = 'Available', UserID = NULL, Occupied = 0 WHERE SpaceID = ?`;
+
+    connection.query(completeRequest, [requestId], err1 => {
+      if (err1) {
+        console.error("Request completion error:", err1);
+        return res.status(500).json({ error: "Failed to mark request complete" });
+      }
+
+      connection.query(freeSpace, [spaceId], err2 => {
+        if (err2) {
+          console.error("Space freeing error:", err2);
+          return res.status(500).json({ error: "Failed to free space" });
+        }
+
+        res.json({ message: "Space released successfully" });
+      });
+    });
   });
 });
 
@@ -700,6 +766,22 @@ app.delete('/api/events/:id', (req, res) => {
     if (err) return res.status(500).json({ error: 'Failed to delete event' });
     res.json({ message: 'Event deleted successfully' });
   });
+});
+
+//Serve dashboard
+app.use(express.static(path.join(__dirname, 'Public')));
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
+});
+
+//debug delete later - open
+app.use((err, req, res, next) => {
+  console.error("[GLOBAL ERROR HANDLER]", err.stack);
+  res.status(500).send("Something broke");
+});
+//debug delete later - close
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
 });
 
 

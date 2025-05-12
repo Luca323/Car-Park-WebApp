@@ -59,91 +59,87 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // Function that gets the current parking space stats 
-  async function getStats() {
-    try {
-      const res = await fetch(`http://localhost:8080/api/spaces`);
-  
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-  
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response is not JSON');
-      }
-  
-      const spaces = await res.json();
-      console.log("Fetched spaces:", spaces);
-  
-      const total = spaces.length;
-  
-      const available = spaces.filter(s =>
-        (s.Status === 'Available') && s.UserID === null
-      ).length;
-  
-      const occupied = spaces.filter(s =>
-        s.Status === 'Occupied' && s.UserID !== null
-      ).length;
-  
-      const reserved = spaces.filter(s =>
-        s.Status === 'Reserved'
-      ).length;
-  
-      const blocked = spaces.filter(s =>
-        s.Status === 'Blocked'
-      ).length;
-  
-      return { total, available, blocked, reserved, occupied, spaces };
-    } catch (err) {
-      console.error("getStats() error:", err);
-      return { total: 0, available: 0, blocked: 0, reserved: 0, occupied: 0, spaces: [] };
-    }
-  }
-
-  //Function to update the dashboard summary & breakdown info
   async function updateDashboard() {
     await fetch("/api/cleanup-expired", { method: "POST" });
+
     const [spacesRes, requestsRes] = await Promise.all([
       fetch("/api/spaces"),
       fetch("/api/requests")
     ]);
-  
+
     const spaces = await spacesRes.json();
     const requests = await requestsRes.json();
     const now = new Date();
-  
+
     let available = 0, blocked = 0, reserved = 0, occupied = 0;
     const total = spaces.length;
     const byCarPark = {};
 
     for (const space of spaces) {
       const name = `${space.CarparkName} (ID: ${space.CarparkID})`;
-    
       if (!byCarPark[name]) {
         byCarPark[name] = { available: 0, blocked: 0, reserved: 0, occupied: 0 };
       }
-    
-      let status = space.Status;
-    
-      // Check if the space has an accepted, now-active session
-      const activeRequest = requests.find(r =>
-        r.spaceId === space.SpaceID &&
-        r.status === "accepted" &&
-        new Date(r.startDate) <= now &&
-        new Date(r.endDate) > now
-      );
-    
-      if (status === "Reserved" && activeRequest) {
-        status = "Occupied";
-    
+
+      const activeRequest = requests.find(r => {
+        const start = new Date(r.startDate);
+        const end = new Date(r.endDate);
+      
+        return (
+          r.SpaceID === space.SpaceID &&
+          r.status === "accepted" &&
+          start <= now &&
+          now < end
+        );
+      });
+
+      //DEBUG
+      if (space.Status === "Reserved") {
+        console.log("Checking Reserved space", space.SpaceID);
+      
+        if (!activeRequest) {
+          console.log(" No active request matched for space", space.SpaceID);
+        } else {
+          console.log(" Matched active request:", activeRequest);
+        }
+      }
+      //DEBUG
+
+      if (space.Status === "Reserved" && activeRequest) {
+        console.log("Promoting to Occupied: userId =", activeRequest.userID, "| typeof =", typeof activeRequest.userID); //DEBUG LINE
         await fetch(`/api/spaces/${space.SpaceID}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Occupied", userId: activeRequest.UserID })
+          body: JSON.stringify({ status: "Occupied", userId: Number(activeRequest.userID) })
         });
+        space.Status = "Occupied";
       }
-    
-      switch (status) {
+
+      if (space.Status === "Occupied") {
+        const expiredRequest = requests.find(r =>
+          r.SpaceID === space.SpaceID &&
+          r.status === "accepted" &&
+          new Date(r.endDate) <= now
+        );
+
+        if (expiredRequest) {
+          await fetch(`/api/spaces/${space.SpaceID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Available", userId: null })
+          });
+      
+          await fetch(`/api/requests/${expiredRequest.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "completed", endDate: expiredRequest.endDate })
+          });
+      
+          space.Status = "Available";
+        }
+      }
+
+      switch (space.Status) {
         case "Available": available++; byCarPark[name].available++; break;
         case "Blocked": blocked++; byCarPark[name].blocked++; break;
         case "Reserved": reserved++; byCarPark[name].reserved++; break;
@@ -151,10 +147,19 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-  
+    summarySection.innerHTML = `
+      <h2>Space Summary</h2>
+      <ul>
+        <li><strong>Total:</strong> ${total}</li>
+        <li><strong>Available:</strong> ${available}</li>
+        <li><strong>Blocked:</strong> ${blocked}</li>
+        <li><strong>Reserved:</strong> ${reserved}</li>
+        <li><strong>Occupied:</strong> ${occupied}</li>
+      </ul>
+    `;
+
     breakdownSection.innerHTML = `<h2>Car Park Breakdown</h2>`;
     const ul = document.createElement("ul");
-  
     for (const [name, stats] of Object.entries(byCarPark)) {
       const li = document.createElement("li");
       li.innerHTML = `
@@ -166,30 +171,16 @@ window.addEventListener("DOMContentLoaded", () => {
       `;
       ul.appendChild(li);
     }
-  
     breakdownSection.appendChild(ul);
-    summarySection.innerHTML = `
-      <h2>Space Summary</h2>
-      <ul>
-        <li><strong>Total:</strong> ${total}</li>
-        <li><strong>Available:</strong> ${available}</li>
-        <li><strong>Blocked:</strong> ${blocked}</li>
-        <li><strong>Reserved:</strong> ${reserved}</li>
-        <li><strong>Occupied:</strong> ${occupied}</li>
-      </ul>
-    `;
   }
 
-
-  // Function to display pending parking requests & allow the admin to accept/reject them
   async function updateRequests() {
     requestsSection.innerHTML = `<h2>Parking Requests</h2>`;
     try {
-      const[requestsRes, spacesRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/requests`),
-        fetch(`http://localhost:8080/api/spaces`)
+      const [requestsRes, spacesRes] = await Promise.all([
+        fetch("/api/requests"),
+        fetch("/api/spaces")
       ]);
-      
       const requests = await requestsRes.json();
       const spaces = await spacesRes.json();
       const pending = requests.filter(r => r.status === "pending");
@@ -200,7 +191,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const list = document.createElement("ul");
-  
+
       pending.forEach(req => {
         const li = document.createElement("li");
         li.innerHTML = `
@@ -210,75 +201,71 @@ window.addEventListener("DOMContentLoaded", () => {
           <strong>Cost:</strong> £${req.cost}<br>
           <strong>Status:</strong> ${req.status.toUpperCase()}<br>
         `;
-    
-        // Logic for the accept button
+
         const acceptBtn = document.createElement("button");
         acceptBtn.textContent = "Accept";
         acceptBtn.onclick = async () => {
-          const available = spaces.filter(s => s.CarparkName === req.carPark && 
+          const available = spaces.filter(s => s.CarparkName === req.carPark &&
             s.Status === "Available" &&
             s.UserID === null);
-    
+
           if (available.length === 0) {
             alert(`No available spaces in ${req.carPark} to assign.`);
             return;
           }
-        
-          // Assigns the driver the first available space
+
           const assigned = available[0];
 
-          await fetch(`http://localhost:8080/api/requests/${req.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json"},
-            body: JSON.stringify({ status: "accepted", spaceId: assigned.SpaceID})
-          });
-
-          await fetch(`http://localhost:8080/api/spaces/${assigned.SpaceID}`, {
+          await fetch(`/api/requests/${req.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "Reserved" })
+            body: JSON.stringify({ status: "accepted", spaceId: assigned.SpaceID })
+          });
+
+          await fetch(`/api/spaces/${assigned.SpaceID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Reserved", userId: null })
           });
 
           alert("Request accepted and space reserved");
           await updateDashboard();
           await updateRequests();
         };
-  
-  
-      // Logic for the reject button
-      const rejectBtn = document.createElement("button");
-      rejectBtn.textContent = "Reject";
-      rejectBtn.onclick = async () => {
-        await fetch(`http://localhost:8080/api/requests/${req.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json"},
-          body: JSON.stringify({ status: "rejected"})
-        });
-        alert("Request rejected");
-        await updateRequests();
-        await updateDashboard();
-      };
 
-      li.appendChild(acceptBtn);
-      li.appendChild(rejectBtn);
-      list.appendChild(li);
-    });
-  
-    requestsSection.appendChild(list);
-  } catch (err) {
-    console.error("Error updating requests:", err);
+        const rejectBtn = document.createElement("button");
+        rejectBtn.textContent = "Reject";
+        rejectBtn.onclick = async () => {
+          await fetch(`/api/requests/${req.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "rejected" })
+          });
+          alert("Request rejected");
+          await updateRequests();
+          await updateDashboard();
+        };
+
+        li.appendChild(acceptBtn);
+        li.appendChild(rejectBtn);
+        list.appendChild(li);
+      });
+
+      requestsSection.appendChild(list);
+    } catch (err) {
+      console.error("Error updating requests:", err);
+    }
   }
-}
 
-  // Function to display the full list of spaces with their status
   async function updateSpaceList() {
-    const { spaces } = await getStats();
+    const spacesRes = await fetch("/api/spaces");
+    const spaces = await spacesRes.json();
+  
     spaceListSection.innerHTML = "<h2>Space List</h2>";
     const list = document.createElement("ul");
   
     spaces.forEach(space => {
       const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
-      
       const li = document.createElement("li");
       li.innerHTML = `
         <strong>Space ${space.SpaceID}</strong> — ${space.CarparkName} — <em>${status}</em>
@@ -288,11 +275,14 @@ window.addEventListener("DOMContentLoaded", () => {
   
     spaceListSection.appendChild(list);
   }
-
-  // Initial load of dashboard, requests, and the space list
   (async () => {
-    updateDashboard();
-    updateRequests();
-    updateSpaceList();
+    await updateDashboard();
+    await updateRequests();
+    await updateSpaceList();
+
+    setInterval(() => {
+      updateDashboard();
+      updateSpaceList();
+    }, 15* 1000);
   })();
 });

@@ -102,21 +102,27 @@ window.addEventListener("DOMContentLoaded", () => {
           notifyBtn.textContent = "Notify Departure";
       
           notifyBtn.onclick = async () => {
-            const now = new Date().toISOString();
-            await fetch(`api/requests/${request.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: "completed", endDate: now }) 
-            });
-
-            await fetch(`/api/spaces/${request.spaceId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: "Available", userId: null })
-            });
-            
-            alert("Departure Recorded");
-            location.reload();
+            const confirmed = confirm("Are you sure you want to free this space now?");
+            if (!confirmed) return;
+          
+            try {
+              const res = await fetch(`/api/requests/${request.id}/departure`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+              });
+          
+              const data = await res.json();
+          
+              if (res.ok) {
+                alert(data.message || "Departure successfully notified.");
+                await renderSessions(); // re-render dashboard instead of reloading
+              } else {
+                alert("Failed to notify departure: " + (data.error || "Unknown error"));
+              }
+            } catch (err) {
+              console.error("Departure error:", err);
+              alert("Network error notifying departure.");
+            }
           };
           
           li.appendChild(notifyBtn);
