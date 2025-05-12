@@ -88,7 +88,7 @@ const rateLimit = require('express-rate-limit');
 
 // Create a limiter for login attempts
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 1000, 
   max: 5, 
   message: {
     error: 'Too many login attempts. Please try again after 15 minutes.'
@@ -377,7 +377,7 @@ app.get('/api/spaces1', (req, res) => {
 
 app.put('/api/spaces/:id', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, userId } = req.body;
 
   if (!status) {
     return res.status(400).json({ error: 'Status is required' });
