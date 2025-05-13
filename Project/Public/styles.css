@@ -11,6 +11,7 @@ body {
     min-height: 100vh;
 }
 
+/* ==================HOME PAGE STYLING ======================*/
 .home-page header {
     display: flex;
     justify-content: space-between;
@@ -22,41 +23,101 @@ body {
   }
   
 .home-page header h1 {
-margin: 0 auto;
-font-size: 24px;
-text-align: center;
+    margin: 0 auto;
+    font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 24px;
+    text-align: center;
 }
   
 .home-page header nav {
-position: absolute;
-top: 5px;
-right: 10px;
-display: flex;
-gap: 20px;
-background-color: #274e97;
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    display: flex;
+    gap: 20px;
+    background-color: #274e97;
 }
 
 .home-page header nav a {
-color: white;
-text-decoration: none;
-font-weight: bold;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
 }
 
 .home-page header nav a:hover {
-text-decoration: underline;
+    text-decoration: underline;
 }
 .home-page header .logo {
-position: absolute;
-left: 20px;
-height: 55px;
+    position: absolute;
+    left: 20px;
+    height: 55px;
+}
+
+.home-page .home-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    padding: 40px 40px;
+    background: none;
+    color: #003366;
+}
+
+.home-page .home-left {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.home-page .biglogo {
+    width: 125%;
+    height: auto;
+    margin: 0;
+}
+
+.home-page .home-right {
+    flex: 1;
+    min-width: 280px;
+    padding-left: 50px;
+}
+
+.home-page .features {
+    list-style-type: disc;
+    padding-left: 20px;
+    text-align: left;
+}
+
+.home-page .features li {
+    margin: 10px 0;
+    font-size: 16px;
 }
 
 /* Header */
 header {
-    background-color: #003366;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #274e97;
     color: white;
     padding: 20px;
     text-align: center;
+    position: relative;
+}
+
+header h1 {
+    margin: 0 auto;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 24px;
+    text-align: center;
+}
+
+header .logo {
+    position: absolute;
+    left: 20px;
+    height: 55px;
 }
 
 /* Login/Register Pages */

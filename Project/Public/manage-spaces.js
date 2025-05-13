@@ -111,7 +111,7 @@ fetch('/api/carparks')
     
     // Filter by status
     if (filterStatus !== "all") {
-      spaces = spaces.filter(s => s.Status === filterStatus);
+      spaces = spaces.filter(s => s.Status.toLowerCase() === filterStatus);
     } 
   
     // Search
