@@ -12,6 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="/managespaces">Manage Spaces</a>
     <a href="/manageevents">Manage Events</a>
     <a href="/sendnotif">Send Notifications</a>
+    <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
 
@@ -22,7 +23,27 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const section = document.createElement("div");
   section.className = "section";
-  section.innerHTML = `<h2>📅 Schedule New Event</h2>`;
+  section.innerHTML = `<h2>Schedule New Event</h2>`;
+
+  //Logout logic
+  const logoutLink = document.getElementById("logout-link");
+  logoutLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        location.href = "/";
+      } else {
+        alert("Failed to log out.");
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Error during logout.");
+    }
+  });
 
   // Car park selection dropdown
   const carParkSelect = document.createElement("select");

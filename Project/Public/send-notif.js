@@ -11,6 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="/managespaces">Manage Spaces</a>
     <a href="/manageevents">Manage Events</a>
     <a href="/sendnotif">Send Notifications</a>
+    <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
 
@@ -23,6 +24,26 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const heading = document.createElement("h2");
   heading.textContent = "Notify Users";
+
+  //Logout logic
+  const logoutLink = document.getElementById("logout-link");
+  logoutLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.ok) {
+        location.href = "/";
+      } else {
+        alert("Failed to log out.");
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Error during logout.");
+    }
+  });
 
   // Creating the input text area 
   const textarea = document.createElement("textarea");
