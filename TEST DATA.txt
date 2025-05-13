@@ -11,8 +11,7 @@ Marvin Cheese - test2
 INSERT INTO logininfo (UserID, Username, Passkey, Email, PhoneNum, CarNum, Verified, Type) VALUES
 (1009, 'John Pork', '$2b$10$ZrVKyWQ/yrRkq3IT8zeyROPw5in/KqjDgWKCJfR6hoOudnUEB8FhW', 'john@example.com', '07123456789', 'AB12CDE', 1, 'driver'),
 (2431, 'Marvin Cheese', '$2b$10$lIw7higKag9NDhnzq.2dveGnPxZfuGpGY/hUlu/OvwhwedNwuWaRe', 'jane@example.com', '07234567890', 'CD34EFG', 1, 'driver'),
-(3809, 'Admin', '$2b$10$KlO7HbwCb4ysCjFjcccp3ePMzljuNwXQdcpa8mSEJ8tjaP4hYoTum
-', 'admin@example.com', '07345678901', 'ABCDEF', 1, 'admin');
+(3809, 'Admin', '$2b$10$KlO7HbwCb4ysCjFjcccp3ePMzljuNwXQdcpa8mSEJ8tjaP4hYoTum', 'admin@example.com', '07345678901', 'ABCDEF', 1, 'admin');
 
 
 INSERT INTO Carparks (CarparkID, Name, Size) VALUES
