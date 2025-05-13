@@ -155,8 +155,8 @@ app.post('/register', (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ?';
-    connection.query(checkQuery, [username], (err, results) => {
+    const checkQuery = 'SELECT * FROM logininfo WHERE Username = ? OR Email = ?';
+    connection.query(checkQuery, [username,email], (err, results) => {
         if (err) {
             console.error('Check user error:', err);
             return res.status(500).json({ error: 'Database error' });
