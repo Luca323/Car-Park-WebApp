@@ -1,13 +1,30 @@
 window.addEventListener("DOMContentLoaded", () => {
-    // Adds a class to the body for styling
-    document.body.classList.add("auth-page");
+    document.body.classList.add("login-reg-page");
+    const header = document.createElement("header");
+
+    const logo = document.createElement("img");
+    logo.src = "logo.png";
+    logo.alt = "ParkEase Logo";
+    logo.className = "logo";
+
+    const title = document.createElement("h1");
+    title.textContent = "ParkEase";
+
+    const nav = document.createElement("nav");
+    nav.innerHTML = `
+        <a href="/">Home</a>
+        <a href="/login">Login</a>
+        `;
+
+    header.append(logo, title, nav);
+    document.body.appendChild(header);
 
     // Creating main container & header
     const container = document.createElement("div");
     container.className = "container";
 
     const heading = document.createElement("h2");
-    heading.textContent = "Car Park Login";
+    heading.textContent = "Login";
 
     // Creating the login form
     const form = document.createElement("form");
@@ -32,12 +49,16 @@ window.addEventListener("DOMContentLoaded", () => {
     const registerBtn = document.createElement("a");
     registerBtn.href = "/register";
     registerBtn.textContent = "Click here to register for an account!";
+    registerBtn.className = "register-link"; 
 
     
     // Appending
     form.append(usernameInput, passwordInput, submitBtn, registerBtn);
     container.append(heading, form);
-    document.body.appendChild(container);
+    
+    const main = document.createElement("main");
+    main.appendChild(container);
+    document.body.appendChild(main);
 
     // Handles form submission 
     form.onsubmit = async (e) => {

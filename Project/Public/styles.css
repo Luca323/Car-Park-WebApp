@@ -105,6 +105,7 @@ header {
     padding: 20px;
     text-align: center;
     position: relative;
+    margin-bottom:0px;
 }
 
 header h1 {
@@ -121,13 +122,18 @@ header .logo {
 }
 
 /* Login/Register Pages */
-.auth-page {
+.login-reg-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .login-reg-page main {
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    flex-direction: column;
-}
+  }
 
 .container {
     background: #0056b3;
@@ -148,6 +154,19 @@ header .logo {
     text-align: center;
     height: 100vh;
     padding: 20px;
+}
+
+.register-link {
+    display: block;
+    margin-top: 15px;
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+  }
+  
+.register-link:hover {
+    color: #cce9f3;
 }
 
 /* Hamburger Button */
@@ -181,6 +200,36 @@ nav a {
 nav a:hover {
     background-color: #0066cc;
     border-radius: 4px;
+}
+
+nav a.active {
+    text-decoration: underline;
+    font-weight: bold;
+  }
+
+header nav {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    display: flex;
+    gap:20px;
+    background-color: #274e97;
+}
+
+header nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+header .logo {
+    position: absolute;
+    left: 20px;
+    height: 55px;
 }
 
 /* Dashboard Content */

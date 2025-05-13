@@ -18,7 +18,7 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="/admindashboard">Dashboard</a>
     <a href="/managecarparks">Manage Car Parks</a>
     <a href="/managespaces">Manage Spaces</a>
-    <a href="/manageevents">Manage Events</a>
+    <a href="/manageevents" class="active">Manage Events</a>
     <a href="/sendnotif">Send Notifications</a>
     <a href="#" id="logout-link">Logout</a>
   `;

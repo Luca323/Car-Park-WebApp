@@ -14,7 +14,7 @@ window.addEventListener("DOMContentLoaded", () => {
   
     const nav = document.createElement("nav");
     nav.innerHTML = `
-      <a href="/driverdashboard">Dashboard</a>
+      <a href="/driverdashboard" class="active">Dashboard</a>
       <a href="/bookparking">Book Parking</a>
       <a href="/contactus">Contact Us</a>
       <a href="#" id="logout-link">Logout</a>
@@ -25,7 +25,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const container = document.createElement("div");
     container.className = "dashboard";
     document.body.appendChild(container);
-  
+
+    const grid = document.createElement("div");
+    grid.className = "dashboard-grid";
+      
     // Creating & Appending Sections
     const currentSection = document.createElement("div");
     currentSection.className = "section";

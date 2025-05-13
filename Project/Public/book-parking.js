@@ -15,7 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const nav = document.createElement("nav");
   nav.innerHTML = `
     <a href="/driverdashboard">Dashboard</a>
-    <a href="/bookparking">Book Parking</a>
+    <a href="/bookparking" class="active">Book Parking</a>
     <a href="/contactus">Contact Us</a>
     <a href="#" id="logout-link">Logout</a>
   `;
