@@ -4,13 +4,18 @@ window.addEventListener("DOMContentLoaded", () => {
     const title = document.createElement("h1");
     title.textContent = "ParkEase";
 
+    const logo = document.createElement("img");
+    logo.src = "logo.png"; 
+    logo.alt = "ParkEase Logo";
+    logo.className = "logo";
+
     const nav = document.createElement("nav");
     nav.innerHTML = `
         <a href="/">Home</a>
         <a href="/login">Login</a>
         `;
     
-    header.append(title, nav);
+    header.append(logo,title, nav);
     document.body.appendChild(header);
 
     // Creating main container
