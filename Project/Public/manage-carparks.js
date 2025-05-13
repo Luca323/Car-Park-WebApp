@@ -168,6 +168,7 @@ window.addEventListener("DOMContentLoaded", () => {
           if (res.ok) {
             carParks.push({ CarparkID: data.CarparkID, Name: name, Size: size });
             alert("Car park added");
+            location.reload();
           } else {
             alert(data.error || "Add failed");
           }

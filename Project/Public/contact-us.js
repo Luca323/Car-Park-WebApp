@@ -60,18 +60,18 @@ window.addEventListener("DOMContentLoaded", () => {
     nameInput.type = "text";
     nameInput.placeholder = "Your Name";
     nameInput.required = true;
-    nameInput.className = "event-input";
+    nameInput.className = "text-input";
   
     const emailInput = document.createElement("input");
     emailInput.type = "email";
     emailInput.placeholder = "Your Email";
     emailInput.required = true;
-    emailInput.className = "event-input";
+    emailInput.className = "text-input";
   
     const messageInput = document.createElement("textarea");
     messageInput.placeholder = "Your Message";
     messageInput.required = true;
-    messageInput.className = "event-input";
+    messageInput.className = "text-input";
   
     // Submit button
     const submitBtn = document.createElement("button");
