@@ -299,6 +299,7 @@ app.post('/api/cleanup-expired', (req, res) => {
 });
 });
 
+
 //============================ Manage Carparks =================================================
 
 app.put('/api/carparks/:id', (req, res) => {
@@ -646,7 +647,7 @@ app.post('/api/notify', (req, res) => {
 app.get('/api/events', (req, res) => {
   const query = `
     SELECT Events.EventID, Events.Title, Events.Start, Events.End,
-           Carparks.Name AS CarparkName, Events.CarparkID, Events.ReservationID
+           Carparks.Name AS CarparkName, Events.CarparkID
     FROM Events
     JOIN Carparks ON Events.CarparkID = Carparks.CarparkID
   `;
@@ -657,128 +658,113 @@ app.get('/api/events', (req, res) => {
 });
 
 app.post('/api/events', async (req, res) => {
-  const { EventID, Title, Start, End, CarparkID, UserID, reservedSpaces } = req.body;
+  const { EventID, Title, Start, End, CarparkID } = req.body;
 
-  // Input validation
-  if (!EventID || !Title || !Start || !End || !CarparkID || !UserID || !reservedSpaces) {
+  if (!EventID || !Title || !Start || !End || !CarparkID) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Parse datetime components
-  const startDate = Start.split('T')[0];
-  const arrivalTime = Start.split('T')[1];
-  const departureTime = End.split('T')[1];
-
-  try {
-    // Start transaction
-    await new Promise((resolve, reject) => {
-      connection.beginTransaction(err => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
-
-    // Find available spaces - using callback style
-    const spaces = await new Promise((resolve, reject) => {
-      connection.query(
-        `SELECT SpaceID FROM Spaces 
-         WHERE CarparkID = ? AND Status = 'Available' 
-         LIMIT ?`,
-        [CarparkID, reservedSpaces],
-        (err, results) => {
-          if (err) return reject(err);
-          resolve(results);
-        }
-      );
-    });
-
-    if (!spaces || spaces.length < reservedSpaces) {
-      await new Promise((resolve, reject) => {
-        connection.rollback(err => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-      return res.status(400).json({ error: 'Not enough available spaces' });
-    }
-
-    // Create reservations
-    const reservationIds = [];
-    for (const space of spaces) {
-      const reservationResult = await new Promise((resolve, reject) => {
-        connection.query(
-          `INSERT INTO Reservations (UserID, SpaceID, startDate, Arrival, Departure)
-           VALUES (?, ?, ?, ?, ?)`,
-          [UserID, space.SpaceID, startDate, arrivalTime, departureTime],
-          (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-          }
-        );
-      });
-
-      reservationIds.push(reservationResult.insertId);
-
-      await new Promise((resolve, reject) => {
-        connection.query(
-          `UPDATE Spaces SET Status = 'Reserved' WHERE SpaceID = ?`,
-          [space.SpaceID],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
-      });
-    }
-
-    // Create event (using first reservation ID)
+  try{
     await new Promise((resolve, reject) => {
       connection.query(
-        `INSERT INTO Events (EventID, Title, \`Start\`, \`End\`, CarparkID, ReservationID)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [EventID, Title, Start, End, CarparkID, reservationIds[0]],
+        `INSERT INTO Events (EventID, Title, Start, End, CarparkID)
+         VALUES (?, ?, ?, ?, ?)`,
+        [EventID, Title, Start, End, CarparkID],
         (err) => {
           if (err) return reject(err);
           resolve();
         }
       );
     });
-
-    // Commit transaction
-    await new Promise((resolve, reject) => {
-      connection.commit(err => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
-    
-    return res.status(201).json({
-      message: 'Event and all reservations created successfully',
-      reservedCount: reservationIds.length
-    });
+    res.status(201).json({ message: "Event created and spaces reserved" });
 
   } catch (err) {
-    console.error('Error creating event:', err);
-    
-    // Attempt rollback
-    try {
-      await new Promise((resolve, reject) => {
-        connection.rollback(err => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-    } catch (rollbackErr) {
-      console.error('Rollback failed:', rollbackErr);
-    }
-    
-    return res.status(500).json({ 
-      error: 'Failed to create event and reservations',
-      details: err.message 
-    });
+    console.error("Error creating event:", err);
+    res.status(500).json({ error: "Event creation failed", details: err.message });
   }
 });
 
+// Block spaces for an event
+app.post('/api/events/:eventId/block', (req, res) => {
+  const { eventId } = req.params;
+  const { count } = req.body;
+
+  connection.query(
+    `SELECT * FROM Events WHERE EventID = ?`,
+    [eventId],
+    (err, results) => {
+      if (err || !results.length) {
+        console.error("Event fetch failed:", err);
+        return res.status(500).json({ error: 'Failed to find event' });
+      }
+
+      const event = results[0];
+      const { CarparkID } = event;
+
+      connection.query(
+        `SELECT SpaceID FROM Spaces WHERE CarparkID = ? AND Status = 'Available' LIMIT ?`,
+        [CarparkID, count],
+        (err2, spaces) => {
+          if (err2) {
+            console.error("Space fetch failed:", err2);
+            return res.status(500).json({ error: 'Failed to find spaces' });
+          }
+
+          if (spaces.length < count) {
+            return res.status(400).json({ error: 'Not enough available spaces' });
+          }
+
+          let updated = 0;
+          spaces.forEach(space => {
+            connection.query(
+              `UPDATE Spaces SET Status = 'Blocked' WHERE SpaceID = ?`,
+              [space.SpaceID],
+              (err3) => {
+                if (err3) console.error("Block failed:", err3);
+                updated++;
+
+                if (updated === spaces.length) {
+                  res.json({ message: `${updated} spaces blocked.` });
+                }
+              }
+            );
+          });
+        }
+      );
+    }
+  );
+});
+
+// Release blocked spaces for an event
+app.post('/api/events/:eventId/release', (req, res) => {
+  const { eventId } = req.params;
+
+  connection.query(
+    `SELECT * FROM Events WHERE EventID = ?`,
+    [eventId],
+    (err, results) => {
+      if (err || !results.length) {
+        console.error("Event fetch failed:", err);
+        return res.status(500).json({ error: 'Failed to find event' });
+      }
+
+      const { CarparkID } = results[0];
+
+      connection.query(
+        `UPDATE Spaces SET Status = 'Available' WHERE CarparkID = ? AND Status = 'Blocked'`,
+        [CarparkID],
+        (err2, result) => {
+          if (err2) {
+            console.error("Release failed:", err2);
+            return res.status(500).json({ error: 'Failed to release spaces' });
+          }
+
+          res.json({ message: `${result.affectedRows} spaces released.` });
+        }
+      );
+    }
+  );
+});
 app.delete('/api/events/:id', (req, res) => {
   const query = `DELETE FROM Events WHERE EventID = ?`;
   connection.query(query, [req.params.id], (err) => {

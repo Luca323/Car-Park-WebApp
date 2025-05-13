@@ -85,6 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
   container.appendChild(section);
   document.body.appendChild(container);
 
+  //DO WE NEED THIS? ITS NEVER CALLED??
   async function sendEmailNotification(message) {
     try {
       const response = await fetch('/api/send-notification', {

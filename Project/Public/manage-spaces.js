@@ -51,12 +51,6 @@ window.addEventListener("DOMContentLoaded", () => {
   searchInput.placeholder = "Search by Space ID";
   section.appendChild(searchInput);
 
-  // Input field for reason for blocking space
-  const reasonInput = document.createElement("input");
-  reasonInput.type = "text";
-  reasonInput.placeholder = "Reason for blocking (optional)";
-  section.appendChild(reasonInput);
-
   // List element to show filtered spaces
   const spaceList = document.createElement("ul");
   spaceList.className = "space-list";
@@ -86,14 +80,6 @@ fetch('/api/carparks')
     const res = await fetch(`/api/spaces1?carparkId=${carparkId}`);
     return await res.json();
   };
-
-  // Adds available car parks to the car park dropdown
-  carParks.forEach(park => {
-    const option = document.createElement("option");
-    option.value = park.name;
-    option.textContent = park.name;
-    carParkSelect.appendChild(option);
-  });
 
   // Function to render space list based on selected car park & filters
   async function renderSpaces(carParkId, filterStatus = "all") {

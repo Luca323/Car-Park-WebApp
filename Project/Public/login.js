@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", () => {
     container.append(heading, form);
     document.body.appendChild(container);
 
-    // Handles form submission (needs to be updated to direct to different dashboards depending on admin/driver)
+    // Handles form submission 
     form.onsubmit = async (e) => {
         e.preventDefault();
     

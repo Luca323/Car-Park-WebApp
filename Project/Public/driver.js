@@ -78,7 +78,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const allRequests = await res.json();
 
       return allRequests.filter(r => r.userID === userID);
-      console.log("Filtered requests for userID", userID, ":", allRequests); //temp
     }
   
     // Building the UI element for each parking session

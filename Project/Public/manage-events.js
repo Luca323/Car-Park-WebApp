@@ -51,13 +51,6 @@ window.addEventListener("DOMContentLoaded", () => {
   defaultOption.value = "";
   carParkSelect.appendChild(defaultOption);
 
-  // Appends existing car parks to the dropdown
-  carParks.forEach(park => {
-    const opt = document.createElement("option");
-    opt.value = park.name;
-    opt.textContent = park.name;
-    carParkSelect.appendChild(opt);
-  });
 
   // Creating input fields for the event data
   const titleInput = document.createElement("input");
@@ -70,10 +63,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const endDateInput = document.createElement("input");
   endDateInput.type = "datetime-local";
-
-  const noteInput = document.createElement("textarea");
-  noteInput.placeholder = "Event Description";
-  noteInput.className = "text-input";
 
   const reserveInput = document.createElement("input");
   reserveInput.type = "number";
@@ -91,7 +80,7 @@ window.addEventListener("DOMContentLoaded", () => {
   section.append(
     carParkSelect,
     titleInput, startDateInput, endDateInput,
-    noteInput, reserveInput, addBtn,
+    reserveInput, addBtn,
     document.createElement("hr"),
     eventList
   );
@@ -103,14 +92,13 @@ window.addEventListener("DOMContentLoaded", () => {
     return await res.json();
   }
   
-  async function saveEvent({ title, startDate, endDate, carParkId, userId, reservedSpaces }) {
+  async function saveEvent({ title, startDate, endDate, carParkId, reservedSpaces }) {
     const event = {
       EventID: `event-${Date.now()}`,
       Title: title,
       Start: startDate,
       End: endDate,
       CarparkID: carParkId,
-      UserID: userId,
       reservedSpaces: reservedSpaces
     };
   
@@ -136,29 +124,49 @@ window.addEventListener("DOMContentLoaded", () => {
     events.forEach(ev => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <strong>${ev.Title}</strong><br>
-        <em>${ev.CarparkName}</em><br>
-        ${new Date(ev.Start).toLocaleString()} → ${new Date(ev.End).toLocaleString()}<br>
-        Reservation ID: ${ev.ReservationID}
-      `;
+      <strong>${ev.Title}</strong><br>
+      <em>${ev.CarparkName}</em><br>
+      ${new Date(ev.Start).toLocaleString()} → ${new Date(ev.End).toLocaleString()}
+    `;
   
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
       delBtn.onclick = async () => {
-        await deleteEvent(ev.EventID);
+        if (!confirm("Delete this event and release its spaces?")) return;
+        await fetch(`/api/events/${ev.EventID}/release`, { method: "POST" });
+        await fetch(`/api/events/${ev.EventID}`, { method: "DELETE" });
         renderEvents();
       };
-  
+
+      const blockBtn = document.createElement("button");
+      blockBtn.textContent = "Block Spaces";
+      blockBtn.onclick = async () => {
+        const count = parseInt(prompt("How many spaces to block?"), 10);
+        if (!count || count < 1) return alert("Invalid number.");
+        const res = await fetch(`/api/events/${ev.EventID}/block`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ count })
+        });
+        const data = await res.json();
+        alert(data.message);
+      };
+
+      const releaseBtn = document.createElement("button");
+      releaseBtn.textContent = "Release Spaces";
+      releaseBtn.onclick = async () => {
+        const res = await fetch(`/api/events/${ev.EventID}/release`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        alert(data.message);
+      };
+
+      li.appendChild(blockBtn);
+      li.appendChild(releaseBtn);
       li.appendChild(delBtn);
       eventList.appendChild(li);
     });
-  }
-
-  async function getLoggedInUserId() {
-    const res = await fetch('/api/me');
-    const data = await res.json();
-    console.log('Logged-in UserID:', data.userID);
-    return data.userID;
   }
 
   // Handles form submission 
@@ -168,7 +176,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const endDate = endDateInput.value;
     const carParkId = carParkSelect.value;
     const reservedSpaces = parseInt(reserveInput.value, 10);
-    const userId = await getLoggedInUserId(); // ✅ await it!
+    
   
     if (!title || !startDate || !endDate || !carParkId || isNaN(reservedSpaces)) {
       alert("Please fill in all required fields.");
@@ -180,7 +188,6 @@ window.addEventListener("DOMContentLoaded", () => {
       startDate,
       endDate,
       carParkId,
-      userId,
       reservedSpaces
     });
   
@@ -196,7 +203,6 @@ window.addEventListener("DOMContentLoaded", () => {
     titleInput.value = "";
     startDateInput.value = "";
     endDateInput.value = "";
-    noteInput.value = "";
     carParkSelect.value = "";
     reserveInput.value = "";
   };

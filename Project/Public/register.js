@@ -52,7 +52,7 @@ window.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
 
       const newUser = {
-        username: nameInput.value.trim(), // mapping nameInput to username
+        username: nameInput.value.trim(), 
         passkey: passInput.value.trim(),
         phone: contactInput.value.trim(),
         email: emailInput.value.trim().toLowerCase(),
