@@ -1,7 +1,15 @@
 window.addEventListener("DOMContentLoaded", () => {
   // Creating and appending the header and nav bar
   const header = document.createElement("header");
-  header.innerHTML = `<h1>Send Notifications</h1>`;
+  
+  const logo = document.createElement("img");
+  logo.src = "logo.png";
+  logo.className = "logo";
+
+  const title = document.createElement("h1");
+  title.textContent = "ParkEase";
+
+  header.append(logo, title);
   document.body.appendChild(header);
   
   const nav = document.createElement("nav");
