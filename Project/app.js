@@ -209,6 +209,7 @@ app.post('/register', (req, res) => {
         });
     });
 });
+
 //Logout
 app.post('/logout', (req, res) => {
   req.session.destroy(err => {
@@ -217,6 +218,7 @@ app.post('/logout', (req, res) => {
     res.status(200).json({ message: 'Logged out' });
   });
 });
+
 //=========================== Verify Emails ==========================================
 app.get('/verify-email', (req, res) => {
   const { token } = req.query;
