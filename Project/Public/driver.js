@@ -32,32 +32,30 @@ window.addEventListener("DOMContentLoaded", () => {
     // Creating & Appending Sections
     const currentSection = document.createElement("div");
     currentSection.className = "section";
-    currentSection.innerHTML = "<h2>Current Parking Sessions</h2>";
+    currentSection.innerHTML = "<h2>Current Sessions</h2>";
     const currentList = document.createElement("ul");
     currentSection.appendChild(currentList);
-    container.appendChild(currentSection);
   
     const upcomingSection = document.createElement("div");
     upcomingSection.className = "section";
-    upcomingSection.innerHTML = "<h2>Upcoming Parking Sessions</h2>";
+    upcomingSection.innerHTML = "<h2>Upcoming Sessions</h2>";
     const upcomingList = document.createElement("ul");
     upcomingSection.appendChild(upcomingList);
-    container.appendChild(upcomingSection);
-  
+    
     const pendingSection = document.createElement("div");
     pendingSection.className = "section";
     pendingSection.innerHTML = "<h2>Pending Parking Requests</h2>";
     const pendingList = document.createElement("ul");
     pendingSection.appendChild(pendingList);
-    container.appendChild(pendingSection);
-  
+    
     const pastSection = document.createElement("div");
     pastSection.className = "section";
     pastSection.innerHTML = "<h2>Recent Past Sessions</h2>";
     const pastList = document.createElement("ul");
     pastSection.appendChild(pastList);
-    container.appendChild(pastSection);
   
+    grid.append(currentSection, upcomingSection, pendingSection, pastSection);
+    container.appendChild(grid);
 
     //Logout logic
     const logoutLink = document.getElementById("logout-link");

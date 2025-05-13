@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Creating section for booking form
   const section = document.createElement("div");
   section.className = "section";
-  section.innerHTML = "<h2>Parking Booking</h2>";
+  section.innerHTML = "<h2>Book Parking</h2>";
 
   async function getUserID() { //Retrieves logged in user id for future use
     try {
