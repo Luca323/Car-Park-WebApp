@@ -58,7 +58,7 @@ window.addEventListener("DOMContentLoaded", () => {
     container.appendChild(section);
   
     // Handles form submission
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
   
       const message = {
@@ -74,13 +74,30 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
   
-      // stores message in local storage (needs to go to DB & emailed to admin)
-      const storedMessages = JSON.parse(localStorage.getItem("contactMessages")) || [];
-      storedMessages.push(message);
-      localStorage.setItem("contactMessages", JSON.stringify(storedMessages));
+      try {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: message.name,
+            email: message.email,
+            message: message.content
+          })
+        });
   
-      // Displays confirmation & resets form values
-      confirmation.innerHTML = `<p>✅ Message sent! We'll get back to you soon.</p>`;
-      form.reset();
+        const data = await res.json();
+  
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to send message");
+        }
+  
+        confirmation.innerHTML = `<p>Message sent! We'll get back to you soon.</p>`;
+        form.reset();
+  
+      } catch (err) {
+        console.error(err);
+        confirmation.innerHTML = `<p style="color:red;">Failed to send message. Please try again later.</p>`;
+      }
     });
   });
+  

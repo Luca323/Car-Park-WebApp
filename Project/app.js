@@ -773,6 +773,30 @@ app.delete('/api/events/:id', (req, res) => {
   });
 });
 
+// CONTACT US FORM 
+app.post('/api/contact', (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const mailOptions = {
+    from: '"ParkEase Contact" <chopseven@gmail.com>', // Sent from same account as verification
+    to: 'parkeasehelp@gmail.com',                     // Destination inbox
+    subject: `New Contact Form Message from ${name}`,
+    text: `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+  };
+
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error("Contact email error:", err);
+      return res.status(500).json({ error: 'Failed to send message' });
+    }
+    res.json({ message: 'Message sent successfully' });
+  });
+});
+
 //Serve dashboard
 app.use(express.static(path.join(__dirname, 'Public')));
 app.get("/", (req, res) => {
