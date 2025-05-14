@@ -12,7 +12,7 @@ connection.connect((err) => {
         console.error('MySQL connection failed:', err.stack);
         return;
     }
-    console.log('Connected to MySQL as ID', connection.threadId);
+    console.log('Connected to MySQL as ID', connection.threadId); //Confirms connection in console
 });
 
-module.exports = connection;
+module.exports = connection; //Exports database connection

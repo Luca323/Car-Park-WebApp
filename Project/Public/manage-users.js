@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Header & nav bar
+  //Header & nav bar
   const header = document.createElement("header");
 
   const logo = document.createElement("img"); 
@@ -41,14 +41,26 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Logout logic
+  const navToggle = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      navLinks.classList.toggle("show");
+
+      navToggle.classList.toggle("fa-bars");
+      navToggle.classList.toggle("fa-xmark");
+    });
+  }
+
+  //Logout logic 
   document.getElementById("logout-link").addEventListener("click", async (e) => {
     e.preventDefault();
     await fetch("/logout", { method: "POST", credentials: "include" });
     location.href = "/";
   });
 
-  // Main container
+  //Main container
   const container = document.createElement("div"); container.className = "dashboard";
   document.body.appendChild(container);
 
@@ -62,7 +74,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   container.appendChild(section);
 
-  // Build table for users
+  //Build table for users
   const table = document.createElement("table");
   table.className = "user-table";
   const thead = document.createElement("thead");
@@ -82,7 +94,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const tbody = document.createElement("tbody");
   section.appendChild(table);
   table.appendChild(tbody);
-  // Fetch & render users into table
+  //Fetch & render users into table
   async function loadUsers() {
     try {
       const res = await fetch("/api/users", { credentials: "include" });

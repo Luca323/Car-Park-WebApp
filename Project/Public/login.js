@@ -69,7 +69,7 @@ window.addEventListener("DOMContentLoaded", () => {
     registerBtn.className = "register-link"; 
 
     
-    // Appending
+    //Appending
     form.append(usernameInput, passwordInput, submitBtn, registerBtn);
     container.append(heading, form);
     
@@ -77,17 +77,17 @@ window.addEventListener("DOMContentLoaded", () => {
     main.appendChild(container);
     document.body.appendChild(main);
 
-    // Handles form submission 
+    //Handles form submission 
     form.onsubmit = async (e) => {
         e.preventDefault();
     
         const chkUser = {
             username: usernameInput.value.trim(),
-            passkey: passwordInput.value.trim() // Must match "passkey" expected by backend
+            passkey: passwordInput.value.trim() //Must match password expected by backend
         };
     
         try {
-            const response = await fetch('http://localhost:8080/login', {
+            const response = await fetch('./login', { //Sends entered password to middleware for handling
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ window.addEventListener("DOMContentLoaded", () => {
     
             const data = await response.json();
     
-            if (response.ok) {
+            if (response.ok) { //Middleware sends code 200 if the password is correct
                 alert('Logged in successfully!');
 
                 if(data.Type == 'driver'){
@@ -109,10 +109,10 @@ window.addEventListener("DOMContentLoaded", () => {
                 }
             } else {
                 console.log(data.error)
-                alert(data.error || "Incorrect Login Details!");
+                alert(data.error || "Incorrect Login Details!"); //Tells user if incorrect
             }
         } catch (err) {
-            console.error('Error:', err);
+            console.error('Error:', err); //Catch backend errors
             alert("Login Error!");
         }
     };

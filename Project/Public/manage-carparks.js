@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-    // Creating and appending the header and nav bar
+    //Creating and appending the header and nav bar
     const header = document.createElement("header");
 
     const logo = document.createElement("img");
@@ -29,20 +29,8 @@ window.addEventListener("DOMContentLoaded", () => {
       <a href="#" id="logout-link">Logout</a>
     `;
     document.body.appendChild(nav);
-
-    const navToggle = document.getElementById("hamburger");
-    const navLinks = document.getElementById("nav-links");
-
-    if (navToggle && navLinks) {
-      navToggle.addEventListener("click", () => {
-        navLinks.classList.toggle("show");
-
-        navToggle.classList.toggle("fa-bars");
-        navToggle.classList.toggle("fa-xmark");
-      });
-    }
   
-    // Creating the main container & form section
+    //Creating the main container & form section
     const container = document.createElement("div");
     container.className = "dashboard";
   
@@ -50,7 +38,7 @@ window.addEventListener("DOMContentLoaded", () => {
     section.className = "section";
     section.innerHTML = `<h2>Add or Edit Car Parks</h2>`;
 
-    //Logout logic
+    //Logout
     const logoutLink = document.getElementById("logout-link");
     logoutLink.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -70,7 +58,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
   
-    // Creating the input fields for form
+    //Creating the input fields for form
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.placeholder = "Car Park Name";
@@ -79,7 +67,7 @@ window.addEventListener("DOMContentLoaded", () => {
     spaceInput.type = "number";
     spaceInput.placeholder = "Number of Spaces";
   
-    // Creating the action buttons
+    //Creating the action buttons
     const addBtn = document.createElement("button");
     addBtn.className = "btn";
     addBtn.textContent = "Add Car Park";
@@ -95,7 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
     deleteBtn.className = "btn";
     deleteBtn.textContent = "Delete Selected";
   
-    // Assembling & Appending section
+    //Assembling & Appending section
     section.appendChild(nameInput);
     section.appendChild(spaceInput);
     section.appendChild(addBtn);
@@ -107,7 +95,7 @@ window.addEventListener("DOMContentLoaded", () => {
     container.appendChild(section);
     document.body.appendChild(container);
   
-    // Loads car parks from DB
+    //Loads car parks from DB
     let carParks = [];
 
     fetch('http://localhost:8080/api/carparks')
@@ -139,7 +127,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
   
-    addBtn.onclick = async () => {
+    addBtn.onclick = async () => { //Button to create new carpark
       const name = nameInput.value.trim();
       const size = parseInt(spaceInput.value.trim(), 10);
     
@@ -148,12 +136,12 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
     
-      if (editingIndex !== null) {
-        // We're updating an existing car park
-        const selected = carParks[editingIndex];
+      if (editingIndex !== null) { //Checks if were adding a new carpark or updating an existing one
+
+        const selected = carParks[editingIndex]; //selects carpark to be edited
     
         try {
-          const res = await fetch(`http://localhost:8080/api/carparks/${selected.CarparkID}`, {
+          const res = await fetch(`./api/carparks/${selected.CarparkID}`, { //backend handler
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, size })
@@ -173,9 +161,9 @@ window.addEventListener("DOMContentLoaded", () => {
     
         editingIndex = null;
       } else {
-        // We're adding a new car park
+        //Adding a new car park
         try {
-          const res = await fetch('http://localhost:8080/api/carparks', {
+          const res = await fetch('./api/carparks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, size })
@@ -206,12 +194,12 @@ window.addEventListener("DOMContentLoaded", () => {
       if (selectedIndex === "") return;
     
       const selected = carParks[selectedIndex];
-      nameInput.value = selected.Name; // case-sensitive: match DB column
+      nameInput.value = selected.Name; //case-sensitive: match DB column
       spaceInput.value = selected.Size;
       editingIndex = selectedIndex;
     };
   
-    // Deletes selected car park & removes associated spaces
+    //Deletes selected car park & removes associated spaces
     deleteBtn.onclick = async () => {
       const selectedIndex = carParkSelect.value;
       if (selectedIndex === "") return;
@@ -221,7 +209,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const park = carParks[selectedIndex];
     
       try {
-        const res = await fetch(`http://localhost:8080/api/carparks/${park.CarparkID}`, {
+        const res = await fetch(`./api/carparks/${park.CarparkID}`, {
           method: 'DELETE'
         });
     
@@ -238,6 +226,6 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     };
   
-    // Initialises dropdown with existing car parks
+    //Initialises dropdown with existing car parks
     updateDropdown();
   });
