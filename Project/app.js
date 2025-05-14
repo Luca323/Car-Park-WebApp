@@ -977,7 +977,7 @@ app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
   });
 });
 
-app.get('/api/users/:id/email', (req, res) => {
+app.get('/api/users/:id/email', (req, res) => { //Finds user email by ID
   const userId = req.params.id;
 
   const query = 'SELECT Email FROM logininfo WHERE UserID = ?';
@@ -991,7 +991,7 @@ app.get('/api/users/:id/email', (req, res) => {
   });
 });
 
-app.listen(port, () => {
+app.listen(port, () => { //Launches server on port
   console.log(`Listening on port ${port}`);
 });
 
