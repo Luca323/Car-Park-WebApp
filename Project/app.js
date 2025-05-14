@@ -8,13 +8,13 @@ const session = require('express-session');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'chopseven@gmail.com',
+    user: 'chopseven@gmail.com', //Using my personal email right now
     pass: 'bxqf vaim aucu qgyr' 
   }
 });
 
-const { v4: uuidv4 } = require('uuid');
-let pendingVerifications = {}; // { token: username }
+const { v4: uuidv4 } = require('uuid'); //Tracks user IP
+let pendingVerifications = {};
 
 
 app.use(session({
@@ -23,26 +23,41 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false }
 }));
+app.use(express.json());
 
-const port = 8080;
+function getRandomInt(max) { 
+    return Math.floor(Math.random() * max);
+  }
+
+const port = 8080; //Hosted on port 8080
 
 //====================== Function to check if user logged in ================================
-function requireLogin(req, res, next) {
+
+function requireLogin(req, res, next) { //Prevents users accessing pages via URL without login
   if (req.session.UserID) {
     return next();
   }
   res.status(401).sendFile(path.join(__dirname, 'Public', 'login.html'));
 }
 
-function requireAdmin(req, res, next) {
+function requireAdmin(req, res, next) { //Prevents users accessing admin pages
   if (req.session.UserID && req.session.Type === 'admin') {
     return next();
   }
   res.status(403).send("Access denied. Admins only.");
 }
 
+app.get('/api/me', (req, res) => { //Retrieves session userID
+  if (req.session && req.session.UserID) {
+    res.json({ userID: req.session.UserID });
+  } else {
+    res.json({ userID: null });
+  }
+});
+
 
 //================================== URLs ====================================================
+
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'login.html'));
 });
@@ -95,20 +110,10 @@ app.get('/manageusers', requireLogin, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'manage-users.html'));
 });
 
-app.use(express.json());
-
-app.get('/api/me', (req, res) => {
-  if (req.session && req.session.UserID) {
-    res.json({ userID: req.session.UserID });
-  } else {
-    res.json({ userID: null });
-  }
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
-
-function getRandomInt(max) { 
-    return Math.floor(Math.random() * max);
-  }
 
 //============================ Brute force prevention for login ==============================
 const rateLimit = require('express-rate-limit');
@@ -127,6 +132,7 @@ const loginLimiter = rateLimit({
 //============================ Login/Register/Logout ================================================
 const bcrypt = require('bcrypt');
 
+//Login endpoint
 app.post('/login', loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
   if (!username || !passkey) {
@@ -138,16 +144,16 @@ app.post('/login', loginLimiter, (req, res) => {
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
-    if (Number(results[0].Verified) !== 1) {
+    if (Number(results[0].Verified) !== 1) { //Checks users are verified
       return res.status(403).json({ error: 'Please verify your email before logging in' });
     }
     
 
     const storedHash = results[0].Passkey;
-    const match = await bcrypt.compare(passkey, storedHash);
+    const match = await bcrypt.compare(passkey, storedHash); //Compares password to hashed value in sql
 
     if (match) {
-      req.session.UserID = results[0].UserID;
+      req.session.UserID = results[0].UserID; //Checks ID is also equal
       req.session.Type = results[0].Type; 
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
     } else {
@@ -156,9 +162,9 @@ app.post('/login', loginLimiter, (req, res) => {
   });
 });
 
-const saltRounds = 10; 
+const saltRounds = 10; //For strong hashing
 
-// Registration endpoint
+//Registration endpoint
 app.post('/register', (req, res) => {
     const { username, passkey, phone, email, regNum } = req.body;
 
@@ -177,14 +183,14 @@ app.post('/register', (req, res) => {
             return res.status(409).json({ error: 'User already exists' });
         }
 
-        // Hash the password before storing
+        //Hash the password before storing
         bcrypt.hash(passkey, saltRounds, (err, hashedPassword) => {
             if (err) {
                 console.error('Password hashing error:', err);
                 return res.status(500).json({ error: 'Failed to process password' });
             }
 
-            const genID = getRandomInt(9999);
+            const genID = getRandomInt(9999); //Random user ID - simple solution
             const insertQuery = 'INSERT INTO logininfo (UserID, Username, Passkey, PhoneNum, Email, CarNum) VALUES (?, ?, ?, ?, ?, ?)';
             
             connection.query(insertQuery, [genID, username, hashedPassword, phone, email, regNum], (err, result) => {
@@ -199,7 +205,7 @@ app.post('/register', (req, res) => {
                 const verificationLink = `http://localhost:${port}/verify-email?token=${token}`;
 
                 const mailOptions = {
-                  from: '"ParkEase" <chopseven@gmail.com>',
+                  from: '"ParkEase" <chopseven@gmail.com>', //Using my personal Email
                   to: email,
                   subject: 'Verify Your Email',
                     html: `<p>Click <a href="${verificationLink}">here</a> to verify your email address.</p>`
@@ -239,7 +245,7 @@ app.get('/verify-email', (req, res) => {
     return res.status(400).send('Invalid or expired verification link');
   }
 
-  const updateQuery = 'UPDATE logininfo SET Verified = TRUE WHERE Username = ?';
+  const updateQuery = 'UPDATE logininfo SET Verified = TRUE WHERE Username = ?'; //Sets verified to 1 in table
   connection.query(updateQuery, [username], (err, result) => {
     if (err) {
       console.error('Verification DB error:', err);
@@ -255,7 +261,7 @@ app.get('/verify-email', (req, res) => {
 
 //============================ Admin Dashboard ===============================================
 
-app.get('/api/spaces', (req, res) => {
+app.get('/api/spaces', (req, res) => { //Selects every space and associated carpark
   const query = `
     SELECT 
       Spaces.SpaceID,
@@ -275,7 +281,7 @@ app.get('/api/spaces', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch space data' });
     }
 
-    res.json(results);
+    res.json(results); //returns as JSON object
   });
 });
 
@@ -315,7 +321,7 @@ app.post('/api/cleanup-expired', (req, res) => {
 
 //============================ Manage Carparks =================================================
 
-app.put('/api/carparks/:id', (req, res) => {
+app.put('/api/carparks/:id', (req, res) => { //Designed for updating carparks
     const { name, size } = req.body;
     const { id } = req.params;
   
@@ -323,7 +329,7 @@ app.put('/api/carparks/:id', (req, res) => {
       return res.status(400).json({ error: 'Name and size are required' });
     }
   
-    const query = 'UPDATE Carparks SET Name = ?, Size = ? WHERE CarparkID = ?';
+    const query = 'UPDATE Carparks SET Name = ?, Size = ? WHERE CarparkID = ?';//Updates the table
     connection.query(query, [name, size, id], (err, result) => {
       if (err) {
         console.error('DB error:', err);
@@ -338,7 +344,8 @@ app.put('/api/carparks/:id', (req, res) => {
     });
   });
 
-app.delete('/api/spaces/:id', (req, res) => {
+  //not sure if this is ever used?
+app.delete('/api/spaces/:id', (req, res) => { //Deleting the spaces by id
     const { id } = req.params;
 
     const query = 'DELETE FROM Spaces WHERE SpaceID = ?';
@@ -352,8 +359,8 @@ app.delete('/api/spaces/:id', (req, res) => {
     });
 });
 
-app.get('/api/carparks', (req, res) => {
-  const query = 'SELECT CarparkID, Name, Size FROM Carparks';
+app.get('/api/carparks', (req, res) => { //Selects data from carpark
+  const query = 'SELECT CarparkID, Name, Size FROM Carparks'; //for whatever reson, SELECT * was not working
 
   connection.query(query, (err, results) => {
     if (err) {
@@ -365,7 +372,7 @@ app.get('/api/carparks', (req, res) => {
   });
 });
 
-app.post('/api/carparks', (req, res) => {
+app.post('/api/carparks', (req, res) => { //Uploads new carparks
     const { name, size } = req.body;
 
     if (!name || size == null || size <= 0) {
@@ -387,7 +394,7 @@ app.post('/api/carparks', (req, res) => {
     });
 });
 
-app.delete('/api/carparks/:id', (req, res) => {
+app.delete('/api/carparks/:id', (req, res) => { //Deletes carparks by id
     const { id } = req.params;
 
     const query = 'DELETE FROM Carparks WHERE CarparkID = ?';
@@ -404,7 +411,7 @@ app.delete('/api/carparks/:id', (req, res) => {
 
 //============================ Manage Spaces ==================================================================
 
-app.get('/api/spaces1', (req, res) => {
+app.get('/api/spaces1', (req, res) => { //Alternative retrieval for spaces, selects spaces by carpark ID instead a lump of all spaces
   const { carparkId } = req.query;
 
   if (!carparkId) {
@@ -435,7 +442,7 @@ app.get('/api/spaces1', (req, res) => {
   });
 });
 
-app.put('/api/spaces/:id', (req, res) => {
+app.put('/api/spaces/:id', (req, res) => { //allows for status updates of spaces
   const { id } = req.params;
   let { status, userId } = req.body;
 
@@ -475,10 +482,10 @@ app.put('/api/spaces/:id', (req, res) => {
 
 //============================ Book Parking & Handle requests =================================================
 
-app.post('/api/requests', (req, res) => {
+app.post('/api/requests', (req, res) => { //Creates request in the database
   const { carParkID, userID, startDate, endDate, cost, status } = req.body;
 
-  // Basic validation
+  //Basic validation
   if (!carParkID || !userID || !startDate || !endDate) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -502,7 +509,7 @@ app.post('/api/requests', (req, res) => {
   );
 });
 
-// admin view - get all parking reqs with car park name
+//admin view - get all parking reqs with car park name
 app.get('/api/requests', (req, res) => {
   const query = `
     SELECT
@@ -576,7 +583,7 @@ app.put('/api/requests/:id', (req, res) => {
   });
 });
 
-app.post('/api/requests/:id/departure', (req, res) => {
+app.post('/api/requests/:id/departure', (req, res) => { //If user departs, set status to completed in the backend
   const requestId = req.params.id;
 
   const findQuery = `
@@ -615,14 +622,14 @@ app.post('/api/requests/:id/departure', (req, res) => {
 
 //============================ Notifications =================================================
 
-app.post('/api/notify', (req, res) => {
+app.post('/api/notify', (req, res) => { //Endpoint for admin-sent notifications
   const { message } = req.body;
 
-  if (!message) {
+  if (!message) { //validation
     return res.status(400).json({ success: false, error: 'Message content is required' });
   }
 
-  const query = 'SELECT Email FROM logininfo WHERE Type = "driver"';
+  const query = 'SELECT Email FROM logininfo WHERE Type = "driver"'; //retrieve all user emails
 
   connection.query(query, async (err, results) => {
     if (err) {
@@ -635,7 +642,7 @@ app.post('/api/notify', (req, res) => {
       return res.json({ success: true, count: 0 });
     }
 
-    // Prepare email sending
+    //Prepare email sending
     const sendEmailPromises = emails.map(email =>
       transporter.sendMail({
         from: '"ParkEase Admin" <chopseven@gmail.com>',
@@ -648,16 +655,40 @@ app.post('/api/notify', (req, res) => {
       })
     );
 
-    const sendResults = await Promise.all(sendEmailPromises);
-    const successCount = sendResults.filter(r => r !== null).length;
+    const sendResults = await Promise.all(sendEmailPromises); //Execute email sending
+    const successCount = sendResults.filter(r => r !== null).length; //Counts successfully sent emails
 
     res.json({ success: true, count: successCount });
   });
 });
 
+// CONTACT US FORM 
+app.post('/api/contact', (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const mailOptions = {
+    from: '"ParkEase Contact" <chopseven@gmail.com>', //Sent from same account as verification
+    to: 'parkeasehelp@gmail.com',                     //Destination inbox
+    subject: `New Contact Form Message from ${name}`,
+    text: `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+  };
+
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error("Contact email error:", err);
+      return res.status(500).json({ error: 'Failed to send message' });
+    }
+    res.json({ message: 'Message sent successfully' });
+  });
+});
+
 //======================================= Event-Based Parking ============================================
 
-app.get('/api/events', (req, res) => {
+app.get('/api/events', (req, res) => { //Retrieves existing events from
   const query = `
     SELECT Events.EventID, Events.Title, Events.Start, Events.End,
            Carparks.Name AS CarparkName, Events.CarparkID
@@ -670,7 +701,7 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-app.post('/api/events', async (req, res) => {
+app.post('/api/events', async (req, res) => { //Creates new events
   const { EventID, Title, Start, End, CarparkID } = req.body;
 
   if (!EventID || !Title || !Start || !End || !CarparkID) {
@@ -678,7 +709,7 @@ app.post('/api/events', async (req, res) => {
   }
 
   try{
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => { //Promises all insertion queries will relay a response
       connection.query(
         `INSERT INTO Events (EventID, Title, Start, End, CarparkID)
          VALUES (?, ?, ?, ?, ?)`,
@@ -697,7 +728,7 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// Block spaces for an event
+//Block spaces for an event
 app.post('/api/events/:eventId/block', (req, res) => {
   const { eventId } = req.params;
   const { count } = req.body;
@@ -715,7 +746,7 @@ app.post('/api/events/:eventId/block', (req, res) => {
       const { CarparkID } = event;
 
       connection.query(
-        `SELECT SpaceID FROM Spaces WHERE CarparkID = ? AND Status = 'Available' LIMIT ?`,
+        `SELECT SpaceID FROM Spaces WHERE CarparkID = ? AND Status = 'Available' LIMIT ?`, //Ensures not more spaces can be assigned than exist
         [CarparkID, count],
         (err2, spaces) => {
           if (err2) {
@@ -730,7 +761,7 @@ app.post('/api/events/:eventId/block', (req, res) => {
           let updated = 0;
           spaces.forEach(space => {
             connection.query(
-              `UPDATE Spaces SET Status = 'Blocked' WHERE SpaceID = ?`,
+              `UPDATE Spaces SET Status = 'Blocked' WHERE SpaceID = ?`, //Blocks selected number of spaces
               [space.SpaceID],
               (err3) => {
                 if (err3) console.error("Block failed:", err3);
@@ -748,7 +779,7 @@ app.post('/api/events/:eventId/block', (req, res) => {
   );
 });
 
-// Release blocked spaces for an event
+//Release blocked spaces for an event
 app.post('/api/events/:eventId/release', (req, res) => {
   const { eventId } = req.params;
 
@@ -764,7 +795,7 @@ app.post('/api/events/:eventId/release', (req, res) => {
       const { CarparkID } = results[0];
 
       connection.query(
-        `UPDATE Spaces SET Status = 'Available' WHERE CarparkID = ? AND Status = 'Blocked'`,
+        `UPDATE Spaces SET Status = 'Available' WHERE CarparkID = ? AND Status = 'Blocked'`, //Unblocks the spaces
         [CarparkID],
         (err2, result) => {
           if (err2) {
@@ -778,7 +809,7 @@ app.post('/api/events/:eventId/release', (req, res) => {
     }
   );
 });
-app.delete('/api/events/:id', (req, res) => {
+app.delete('/api/events/:id', (req, res) => { //Deletes events and frees spaces
   const query = `DELETE FROM Events WHERE EventID = ?`;
   connection.query(query, [req.params.id], (err) => {
     if (err) return res.status(500).json({ error: 'Failed to delete event' });
@@ -786,31 +817,8 @@ app.delete('/api/events/:id', (req, res) => {
   });
 });
 
-// CONTACT US FORM 
-app.post('/api/contact', (req, res) => {
-  const { name, email, message } = req.body;
+//========================================================Account Details=================================================
 
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  const mailOptions = {
-    from: '"ParkEase Contact" <chopseven@gmail.com>', // Sent from same account as verification
-    to: 'parkeasehelp@gmail.com',                     // Destination inbox
-    subject: `New Contact Form Message from ${name}`,
-    text: `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
-  };
-
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.error("Contact email error:", err);
-      return res.status(500).json({ error: 'Failed to send message' });
-    }
-    res.json({ message: 'Message sent successfully' });
-  });
-});
-
-//account details 
 // Get account details
 app.get('/api/account', requireLogin, (req, res) => {
   const query = 'SELECT Email, PhoneNum AS phone, CarNum AS regNum FROM logininfo WHERE UserID = ?';
@@ -838,11 +846,11 @@ app.post('/api/account/verify', requireLogin, (req, res) => {
   });
 });
 
-// Update account details
+//Update account details
 app.put('/api/account', requireLogin, (req, res) => {
   const { email, phone, regNum } = req.body;
 
-  // check if email is already used by another account
+  //check if email is already used by another account
   const checkQuery = 'SELECT UserID FROM logininfo WHERE Email = ? AND UserID != ?';
   connection.query(checkQuery, [email, req.session.UserID], (err, results) => {
     if (err) {
@@ -865,9 +873,9 @@ app.put('/api/account', requireLogin, (req, res) => {
   });
 });
 
-// ========================== Manage Users ==========================
-app.get('/api/users', requireLogin, requireAdmin, (req, res) => {
-  // Removed CreatedAt since logininfo has no such column. To track registration date, add a CreatedAt TIMESTAMP column to logininfo.
+//======================================================= Manage Users ==========================================================================
+
+app.get('/api/users', requireLogin, requireAdmin, (req, res) => { //Retrieves user data from DB
   const query = 'SELECT UserID, Username, Email, Type, PhoneNum, CarNum, Verified FROM logininfo';
   connection.query(query, (err, results) => {
     if (err) {
@@ -945,14 +953,9 @@ app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
   });
 });
 
-//Serve dashboard
-app.use(express.static(path.join(__dirname, 'Public')));
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
-});
-
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
+
 
