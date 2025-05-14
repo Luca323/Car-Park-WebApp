@@ -29,17 +29,22 @@ window.addEventListener("DOMContentLoaded", () => {
   container.className = "dashboard";
   document.body.appendChild(container);
 
+  const topGrid = document.createElement("div");
+  topGrid.className = "admin-top-grid";
+  container.appendChild(topGrid);
+
+// Creating the sections for dashboard info
   const summarySection = document.createElement("div");
   summarySection.className = "section";
-  container.appendChild(summarySection);
+  topGrid.appendChild(summarySection);
 
   const breakdownSection = document.createElement("div");
   breakdownSection.className = "section";
-  container.appendChild(breakdownSection);
+  topGrid.appendChild(breakdownSection);
 
   const requestsSection = document.createElement("div");
   requestsSection.className = "section";
-  container.appendChild(requestsSection);
+  topGrid.appendChild(requestsSection);
 
   const spaceListSection = document.createElement("div");
   spaceListSection.className = "section";
@@ -256,20 +261,56 @@ window.addEventListener("DOMContentLoaded", () => {
   async function updateSpaceList() { //Updates spaces when a change is made
     const spacesRes = await fetch("/api/spaces");
     const spaces = await spacesRes.json();
-  
+
     spaceListSection.innerHTML = "<h2>Space List</h2>";
-    const list = document.createElement("ul");
-  
+
+    const spaceGrid = document.createElement("div");
+    spaceGrid.className = "space-grid";
+
+
+    // Group spaces by CarparkName
+    const grouped = {};
     spaces.forEach(space => {
-      const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <strong>Space ${space.SpaceID}</strong> — ${space.CarparkName} — <em>${status}</em>
-      `;
-      list.appendChild(li);
+      if (!grouped[space.CarparkName]) {
+        grouped[space.CarparkName] = [];
+      }
+      grouped[space.CarparkName].push(space);
     });
+
+    Object.entries(grouped).forEach(([carparkName, group]) => {
+      const section = document.createElement("div");
+      section.className = "carpark-section";
+      const header = document.createElement("h3");
+      header.textContent = carparkName;
+      section.appendChild(header);
+
+      const list = document.createElement("ul");
+      group.forEach(space => {
+        const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>Space ${space.SpaceID}</strong> — <em>${status}</em>`;
+        list.appendChild(li);
+      });
+
+      section.appendChild(list);
+      spaceGrid.appendChild(section);
+    });
+
+    spaceListSection.appendChild(spaceGrid);
   
-    spaceListSection.appendChild(list);
+    // spaceListSection.innerHTML = "<h2>Space List</h2>";
+    // const list = document.createElement("ul");
+  
+    // spaces.forEach(space => {
+    //   const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
+    //   const li = document.createElement("li");
+    //   li.innerHTML = `
+    //     <strong>Space ${space.SpaceID}</strong> — ${space.CarparkName} — <em>${status}</em>
+    //   `;
+    //   list.appendChild(li);
+    // });
+  
+    // spaceListSection.appendChild(list);
   }
   (async () => {
     await updateDashboard();

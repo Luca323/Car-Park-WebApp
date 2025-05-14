@@ -28,7 +28,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const container = document.createElement("div"); container.className = "dashboard";
   document.body.appendChild(container);
 
-  const section = document.createElement("div"); section.className = "section";  section.innerHTML = '<h2>Admin Manage Users</h2>';
+  const section = document.createElement("div"); section.className = "section";  
+  section.innerHTML = `
+  <h2>Manage Users</h2>
+  <input type="text" 
+  id="user-search" 
+  placeholder="Search by username or email..." 
+  class="text-input">
+  `;
   container.appendChild(section);
 
   //Build table for users
@@ -42,7 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
       <th>Email</th>
       <th>Type</th>
       <th>Phone</th>
-      <th>Car Number</th>
+      <th>Car Reg</th>
       <th>Verified</th>
       <th>Actions</th>
     </tr>
@@ -61,39 +68,58 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const users = await res.json();
-    //Populate rows
-    tbody.innerHTML = users.length
-      ? users.map(u => `
-          <tr>
-            <td>${u.UserID}</td>
-            <td>${u.Username}</td>
-            <td>${u.Email}</td>
-            <td>${u.Type}</td>
-            <td>${u.PhoneNum || ''}</td>
-            <td>${u.CarNum || ''}</td>
-            <td>${u.Verified ? 'Yes' : 'No'}</td>
-            <td><button data-id="${u.UserID}">Remove</button></td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="7">No users found.</td></tr>';    //Attach remove handlers
-    tbody.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!confirm('Are you sure you want to remove this user?')) return;
-        const id = btn.dataset.id;
-        try {
-          const del = await fetch(`/api/users/${id}`, { method: 'DELETE' }); //middleware delete request
-          if (del.ok) loadUsers();
-          else {
-            const error = await del.json();
-            console.error("Delete error:", error);
-            alert("Failed to remove user: " + (error.error || "Unknown error"));
-          }
-        } catch (err) {
-          console.error("Delete error:", err);
-          alert("Failed to remove user. See console for details.");
-        }
+
+      // search table
+      const searchInput = document.getElementById("user-search");
+
+      function renderFilteredUsers(filter = "") {
+        const lower = filter.toLowerCase();
+        const filtered = users.filter(u =>
+          u.Username.toLowerCase().includes(lower) ||
+          u.Email.toLowerCase().includes(lower)
+        );
+
+        tbody.innerHTML = filtered.length
+          ? filtered.map(u => `
+              <tr>
+                <td>${u.UserID}</td>
+                <td>${u.Username}</td>
+                <td>${u.Email}</td>
+                <td>${u.Type}</td>
+                <td>${u.PhoneNum || ''}</td>
+                <td>${u.CarNum || ''}</td>
+                <td>${u.Verified ? 'Yes' : 'No'}</td>
+                <td><button data-id="${u.UserID}">Remove</button></td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="8">No users match your search.</td></tr>';
+        
+        // Rebind delete buttons
+        tbody.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to remove this user?')) return;
+            const id = btn.dataset.id;
+            try {
+              const del = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+              if (del.ok) loadUsers();
+              else {
+                const error = await del.json();
+                alert("Failed to remove user: " + (error.error || "Unknown error"));
+              }
+            } catch (err) {
+              alert("Failed to remove user. See console for details.");
+            }
+          });
+        });
+      }
+
+      renderFilteredUsers(); // Initial full list
+
+      // Attach live filter
+      searchInput.addEventListener("input", e => {
+        renderFilteredUsers(e.target.value);
       });
-    });
+
   } catch (err) {
     console.error("Error loading users:", err);
     section.innerHTML += `<p class="error">Error: ${err.message}</p>`;
