@@ -22,7 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  //Logout logic
+  //Logout stuff
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -42,12 +42,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // Creating the main dashboard container
+  //Creating the main container
   const container = document.createElement("div");
   container.className = "dashboard";
   document.body.appendChild(container);
 
-  // Creating section for booking form
+  //Creating section for booking form
   const section = document.createElement("div");
   section.className = "section";
   section.innerHTML = "<h2>Book Parking</h2>";
@@ -58,9 +58,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
   
       if (data.userID) {
-        console.log(`Logged in as ${data.userID}`)
+        //console.log(`Logged in as ${data.userID}`)
         return data.userID;
-        // Call functions that depend on userID here
       } else {
         window.location.href = '/login.html';
       }
@@ -79,7 +78,7 @@ window.addEventListener("DOMContentLoaded", () => {
     })
     .catch(err => console.error('Error loading car parks:', err));
 
-  // Dropdown to select car park 
+  //Creates carpark dropdown from the array of carpark info
   const carParkSelect = document.createElement("select");
   carParkSelect.className = "event-input";
   
@@ -96,7 +95,7 @@ window.addEventListener("DOMContentLoaded", () => {
     carParkSelect.appendChild(opt);
   });
 
-  function updateDropdown() { //Copied from manage-carpark.js
+  function updateDropdown() { //Copied from manage-carpark.js (might be obsolete)
     carParkSelect.innerHTML = "";
     const placeholder = document.createElement("option");
     placeholder.textContent = "Select a car park";
@@ -114,7 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // Inputs for start & end date/times 
+  //Inputs for start & end date/times 
   const startDateInput = document.createElement("input");
   startDateInput.type = "datetime-local";
   startDateInput.className = "event-input";
@@ -126,11 +125,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const paymentInfo = document.createElement("div");
   paymentInfo.id = "paymentInfo";
 
-  // Button to submit booking request
+  //Submit button
   const submitBtn = document.createElement("button");
   submitBtn.textContent = "Submit Parking Request";
 
-  // Adds all elements to the section
+  //adds all elements to the section
   section.append(
     carParkSelect,
     startDateInput,
@@ -141,7 +140,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   container.appendChild(section);
 
-  // Calculations for cost based on time of stay
+  //Calculates cost (using £2ph as a test value)
   function calculateCost(startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -150,12 +149,12 @@ window.addEventListener("DOMContentLoaded", () => {
       return 0;
     }
 
-    const durationInHours = (end - start) / (1000 * 60 * 60); // milliseconds to hours
+    const durationInHours = (end - start) / (1000 * 60 * 60); //milliseconds to hours
     const cost = durationInHours * 2; // £2/hour
     return cost.toFixed(2);
   }
 
-  // Logic for handling the submission of the parking request
+  //Handles submission of request to the admins
   submitBtn.onclick = async () => {
     const selectedIndex = carParkSelect.value;
     const startDate = startDateInput.value;
@@ -178,10 +177,10 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
   
-    const userID = await getUserID(); // ✅ get logged in user
-    const carPark = carParks[selectedIndex]; // ✅ get selected car park object
+    const userID = await getUserID(); //get logged in user
+    const carPark = carParks[selectedIndex]; //selected car park object
   
-    const newRequest = {
+    const newRequest = { //declare request as a class
       carParkID: carPark.CarparkID,
       userID: userID,
       startDate: startDate,
@@ -191,7 +190,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   
     try {
-      const res = await fetch('./api/requests', {
+      const res = await fetch('./api/requests', { //retrieve data from backend
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -201,7 +200,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
   
       if (res.ok) {
-        alert("✅ Payment successful! Your parking request has been submitted.");
+        alert("✅ Payment successful! Your parking request has been submitted."); //Cute little message on success
         startDateInput.value = "";
         endDateInput.value = "";
         carParkSelect.value = "";
@@ -215,7 +214,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Displays cost
+  //Displays simulated cost
   function displayCost() {
     const start = startDateInput.value;
     const end = endDateInput.value;

@@ -21,7 +21,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  // Logout logic
+  //Logout logic
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ window.addEventListener("DOMContentLoaded", () => {
     else alert("Failed to log out.");
   });
 
-  // Main container
+  //Main Body
   const container = document.createElement("div");
   container.className = "dashboard";
   document.body.appendChild(container);
@@ -81,7 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   section.append(passwordInput, unlockBtn, form);
 
-  // Unlock logic
+  //Verify after password is entered
   unlockBtn.onclick = async () => {
     const password = passwordInput.value.trim();
     if (!password) return alert("Please enter your password");
@@ -103,7 +103,7 @@ window.addEventListener("DOMContentLoaded", () => {
         return alert(data.error || "Password verification failed");
       }
 
-      // Load user data
+      //Load correct user data
       const infoRes = await fetch("/api/account", { credentials: "include" });
       const user = await infoRes.json();
 
@@ -121,7 +121,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Save changes
+  //Updates SQL with changes
   form.onsubmit = async (e) => {
     e.preventDefault();
 
