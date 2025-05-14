@@ -17,9 +17,10 @@ window.addEventListener("DOMContentLoaded", () => {
   nav.innerHTML = `
     <a href="/admindashboard">Dashboard</a>
     <a href="/managecarparks">Manage Car Parks</a>
-    <a href="/managespaces">Manage Spaces</a>    <a href="/manageevents" class="active">Manage Events</a>
+    <a href="/managespaces">Manage Spaces</a>    
+    <a href="/manageevents" class="active">Manage Events</a>
+    <a href="/manageusers">Manage Users</a>
     <a href="/sendnotif">Send Notifications</a>
-    <a href="/manageusers">Admin Manage Users</a>
     <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
