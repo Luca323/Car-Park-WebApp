@@ -10,14 +10,31 @@ window.addEventListener("DOMContentLoaded", () => {
     const title = document.createElement("h1");
     title.textContent = "ParkEase";
 
+    const hamburger = document.createElement("i");
+    hamburger.className = "fa-solid fa-bars nav-toggle";
+    hamburger.id = "hamburger";
+
     const nav = document.createElement("nav");
+    nav.id = "nav-links";
     nav.innerHTML = `
         <a href="/">Home</a>
         <a href="/login">Login</a>
         `;
 
-    header.append(logo, title, nav);
+    header.append(logo, title, nav, hamburger);
     document.body.appendChild(header);
+
+    const navToggle = document.getElementById("hamburger");
+    const navLinks = document.getElementById("nav-links");
+
+    if (navToggle && navLinks) {
+        navToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show");
+
+        navToggle.classList.toggle("fa-bars");
+        navToggle.classList.toggle("fa-xmark");
+        });
+    }
 
     // Creating main container & header
     const container = document.createElement("div");

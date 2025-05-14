@@ -210,7 +210,13 @@ nav a:hover {
 nav a.active {
     text-decoration: underline;
     font-weight: bold;
-  }
+}
+
+.nav-toggle {
+  display: none;
+  font-size: 24px;
+  cursor: pointer;
+}
 
 header nav {
     position: absolute;
@@ -255,6 +261,23 @@ header .logo {
 
 .section h2 {
     margin-top: 0;
+}
+
+.scroll-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 10px;
+  display: none; 
+  z-index: 1000;
+}
+
+.scroll-to-top:hover {
+  color: white;
 }
 
 /* driver dashboard styling */ 
@@ -424,26 +447,218 @@ button:hover,
     background-color: #f2dede;
 }
 
-/* 🔽 Drop-down behavior on smaller screens */
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: block;
-    }
+/* ============================= */
+/* 📱 Mobile Styling (max 780px) */
+/* ============================= */
+@media (max-width: 780px) {
 
-    nav {
-        display: none;
-        flex-direction: column;
-        align-items: flex-end;
-        padding: 10px 20px;
-    }
+  /* Global padding & font tweaks */
+  body {
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  .nav-toggle {
+    display: block;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
 
-    nav.show {
-        display: flex;
-    }
+  nav {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    background-color: white;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
 
-    nav a {
-        padding: 10px 0;
-        width: 100%;
-        border-top: 1px solid #004080;
-    }
+  nav.show {
+    display: flex;
+  }
+  
+  .home-page header {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    position: relative;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    margin: 0px;
+  }
+
+  header .logo {
+    position: static;
+    margin-bottom: 10px;
+    height: 50px;
+  }
+  
+  header nav {
+    order: 3;
+    width: 100%;
+    position: static;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    background-color: #274e97;
+    padding: 10px;
+    margin-top: 20px;
+  }
+  
+  header nav.show {
+    display: flex;
+  }
+
+  header nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  header nav a:hover {
+    text-decoration: underline;
+    background-color: #002244;
+  }
+
+  .home-page header .logo {
+    position: static;
+    margin-bottom: 10px;
+    height: 50px;
+  }
+
+  .home-page header nav {
+    order: 3;
+    width: 100%;
+    position: static;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    background-color: #274e97;
+    padding: 10px;
+    margin-top: 20px;
+  }
+
+  .home-page nav.show {
+    display: flex;
+  }
+
+  .home-page .home-container {
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+  }
+
+  .home-page .home-left,
+  .home-page .home-right {
+    flex: none;
+    width: 100%;
+    padding-left: 0;
+    text-align: center;
+  }
+
+  .home-page .biglogo {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .dashboard {
+    padding: 10px;
+    margin: 20px auto;
+  }
+
+  .section {
+    padding: 10px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-top-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-top-grid .section {
+    width: 100%;
+  }
+
+  .space-grid {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .space-grid .carpark-section {
+    width: 100%;
+    max-width: none;
+  }
+
+  .container {
+    width: 95%;
+    padding: 20px;
+  }
+
+  input,
+  .text-input,
+  button,
+  .btn {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .user-table {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .user-table thead,
+  .user-table tbody,
+  .user-table th,
+  .user-table td,
+  .user-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .user-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .user-table th {
+    display: none;
+  }
+
+  .user-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: #003366;
+  }
+
+  .user-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0px;
+    background-color: white;
+  }
 }
+

@@ -8,11 +8,16 @@ window.addEventListener("DOMContentLoaded", () => {
   
     const title = document.createElement("h1");
     title.textContent = "ParkEase";
+
+    const hamburger = document.createElement("i");
+    hamburger.className = "fa-solid fa-bars nav-toggle";
+    hamburger.id = "hamburger";
   
-    header.append(logo, title);
+    header.append(logo, title, hamburger);
     document.body.appendChild(header);
   
     const nav = document.createElement("nav");
+    nav.id = "nav-links";
     nav.innerHTML = `
       <a href="/driverdashboard" class="active">Dashboard</a>
       <a href="/bookparking">Book Parking</a>
@@ -21,6 +26,18 @@ window.addEventListener("DOMContentLoaded", () => {
       <a href="#" id="logout-link">Logout</a>
     `;
     document.body.appendChild(nav);
+
+    const navToggle = document.getElementById("hamburger");
+    const navLinks = document.getElementById("nav-links");
+
+    if (navToggle && navLinks) {
+      navToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show");
+
+        navToggle.classList.toggle("fa-bars");
+        navToggle.classList.toggle("fa-xmark");
+      });
+    }
   
     //Creating & Appending the main container for the dashboard
     const container = document.createElement("div");

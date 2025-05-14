@@ -1,11 +1,23 @@
 window.addEventListener("DOMContentLoaded", () => {
   // Header & nav bar
   const header = document.createElement("header");
-  const logo = document.createElement("img"); logo.src = "logo.png"; logo.className = "logo";
-  const title = document.createElement("h1"); title.textContent = "ParkEase";
-  header.append(logo, title); document.body.appendChild(header);
+
+  const logo = document.createElement("img"); 
+  logo.src = "logo.png"; 
+  logo.className = "logo";
+
+  const title = document.createElement("h1"); 
+  title.textContent = "ParkEase";
+
+  const hamburger = document.createElement("i");
+  hamburger.className = "fa-solid fa-bars nav-toggle";
+  hamburger.id = "hamburger";
+
+  header.append(logo, title, hamburger); 
+  document.body.appendChild(header);
 
   const nav = document.createElement("nav");
+  nav.id = "nav-links";
   nav.innerHTML = `
     <a href="/admindashboard">Dashboard</a>
     <a href="/managecarparks">Manage Car Parks</a>
@@ -16,6 +28,18 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
+
+  const navToggle = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      navLinks.classList.toggle("show");
+
+      navToggle.classList.toggle("fa-bars");
+      navToggle.classList.toggle("fa-xmark");
+    });
+  }
 
   // Logout logic
   document.getElementById("logout-link").addEventListener("click", async (e) => {
@@ -82,14 +106,14 @@ window.addEventListener("DOMContentLoaded", () => {
         tbody.innerHTML = filtered.length
           ? filtered.map(u => `
               <tr>
-                <td>${u.UserID}</td>
-                <td>${u.Username}</td>
-                <td>${u.Email}</td>
-                <td>${u.Type}</td>
-                <td>${u.PhoneNum || ''}</td>
-                <td>${u.CarNum || ''}</td>
-                <td>${u.Verified ? 'Yes' : 'No'}</td>
-                <td><button data-id="${u.UserID}">Remove</button></td>
+                <td data-label="User ID">${u.UserID}</td>
+                <td data-label="Username">${u.Username}</td>
+                <td data-label="Email">${u.Email}</td>
+                <td data-label="Type">${u.Type}</td>
+                <td data-label="Phone">${u.PhoneNum || ''}</td>
+                <td data-label="Car Reg">${u.CarNum || ''}</td>
+                <td data-label="Verified">${u.Verified ? 'Yes' : 'No'}</td>
+                <td data-label="Actions"><button data-id="${u.UserID}">Remove</button></td>
               </tr>
             `).join('')
           : '<tr><td colspan="8">No users match your search.</td></tr>';

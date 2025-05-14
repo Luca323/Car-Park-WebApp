@@ -9,10 +9,23 @@ window.addEventListener("DOMContentLoaded", () => {
   const title = document.createElement("h1");
   title.textContent = "ParkEase";
 
-  header.append(logo, title);
-  document.body.appendChild(header);
+  const hamburger = document.createElement("i");
+  hamburger.className = "fa-solid fa-bars nav-toggle";
+  hamburger.id = "hamburger";
+
+  const scrollBtn = document.createElement("i");
+  scrollBtn.className = "fa-regular fa-circle-up scroll-to-top";
+  scrollBtn.title = "Scroll to top";
+
+  scrollBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  header.append(logo, title, hamburger);
+  document.body.append(header, scrollBtn);
 
   const nav = document.createElement("nav");
+  nav.id = "nav-links";
   nav.innerHTML = `
     <a href="/admindashboard" class="active">Dashboard</a>
     <a href="/managecarparks">Manage Car Parks</a>
@@ -23,6 +36,26 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
+
+  const navToggle = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      navLinks.classList.toggle("show");
+
+      navToggle.classList.toggle("fa-bars");
+      navToggle.classList.toggle("fa-xmark");
+    });
+  }
+
+  window.addEventListener("scroll", () => {
+  if (window.scrollY > 300) {
+    scrollBtn.style.display = "block";
+  } else {
+    scrollBtn.style.display = "none";
+  }
+});
 
   //Main container for dashboard
   const container = document.createElement("div");
