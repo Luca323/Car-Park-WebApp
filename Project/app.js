@@ -856,8 +856,8 @@ app.put('/api/account', requireLogin, (req, res) => {
 
     const updateQuery = 'UPDATE logininfo SET Email = ?, PhoneNum = ?, CarNum = ? WHERE UserID = ?';
     connection.query(updateQuery, [email, phone, regNum, req.session.UserID], (err, result) => {
-      if (err2) {
-        console.error("Account update error:", err2);
+      if (err) {
+        console.error("Account update error:", err);
         return res.status(500).json({ error: "Failed to update account" });
       }
       res.json({ message: "Account updated" });
