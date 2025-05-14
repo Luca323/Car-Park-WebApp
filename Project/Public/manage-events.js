@@ -94,11 +94,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const endDateInput = document.createElement("input");
   endDateInput.type = "datetime-local";
 
-  const reserveInput = document.createElement("input");
-  reserveInput.type = "number";
-  reserveInput.placeholder = "Spaces to reserve (optional)";
-  reserveInput.className = "text-input";
-
   // Button to submit event
   const addBtn = document.createElement("button");
   addBtn.textContent = "Create Event";
@@ -110,7 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
   section.append(
     carParkSelect,
     titleInput, startDateInput, endDateInput,
-    reserveInput, addBtn,
+    addBtn,
     document.createElement("hr"),
     eventList
   );
@@ -122,14 +117,14 @@ window.addEventListener("DOMContentLoaded", () => {
     return await res.json();
   }
   
-  async function saveEvent({ title, startDate, endDate, carParkId, reservedSpaces }) {
+  async function saveEvent({ title, startDate, endDate, carParkId }) {
     const event = {
       EventID: `event-${Date.now()}`,
       Title: title,
       Start: startDate,
       End: endDate,
       CarparkID: carParkId,
-      reservedSpaces: reservedSpaces
+      // reservedSpaces: reservedSpaces
     };
   
     const res = await fetch('/api/events', {
@@ -178,8 +173,14 @@ window.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ count })
         });
+
         const data = await res.json();
-        alert(data.message);
+        if (res.ok) {
+          alert(data.message);
+        } else {
+          alert(data.error);
+        }
+        
       };
 
       const releaseBtn = document.createElement("button");
@@ -205,10 +206,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
     const carParkId = carParkSelect.value;
-    const reservedSpaces = parseInt(reserveInput.value, 10);
     
   
-    if (!title || !startDate || !endDate || !carParkId || isNaN(reservedSpaces)) {
+    if (!title || !startDate || !endDate || !carParkId) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -218,7 +218,6 @@ window.addEventListener("DOMContentLoaded", () => {
       startDate,
       endDate,
       carParkId,
-      reservedSpaces
     });
   
     if (result.message) {
@@ -234,7 +233,6 @@ window.addEventListener("DOMContentLoaded", () => {
     startDateInput.value = "";
     endDateInput.value = "";
     carParkSelect.value = "";
-    reserveInput.value = "";
   };
 
   // Initial render of any existing events

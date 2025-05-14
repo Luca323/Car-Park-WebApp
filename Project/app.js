@@ -689,7 +689,7 @@ app.post('/api/events', async (req, res) => {
         }
       );
     });
-    res.status(201).json({ message: "Event created and spaces reserved" });
+    res.status(201).json({ message: "Event created" });
 
   } catch (err) {
     console.error("Error creating event:", err);
@@ -885,17 +885,63 @@ app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
   if (Number(id) === Number(req.session.UserID)) {
     return res.status(403).json({ error: 'Cannot delete your own admin account' });
   }
+
+    const markUpcomingAcceptedAsCompleted = `
+    UPDATE Requests 
+    SET Status = 'completed' 
+    WHERE UserID = ? 
+      AND Status = 'accepted' 
+      AND Start > NOW()
+  `;
+
+    const rejectPendingRequests = `
+    UPDATE Requests 
+    SET Status = 'rejected' 
+    WHERE UserID = ? 
+      AND Status = 'pending'
+  `;
+
+    const freeSpaces = `
+    UPDATE Spaces 
+    SET Status = 'Available', UserID = NULL, Occupied = 0 
+    WHERE SpaceID IN (
+      SELECT SpaceID FROM Requests 
+      WHERE UserID = ? AND Status = 'accepted' AND Start > NOW() AND SpaceID IS NOT NULL
+    )
+  `;
   
   const deleteQuery = 'DELETE FROM logininfo WHERE UserID = ?';
-  connection.query(deleteQuery, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting user:', err);
-      return res.status(500).json({ error: 'Failed to delete user' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json({ message: 'User deleted successfully' });
+
+  connection.query(markUpcomingAcceptedAsCompleted, [id], err1 => {
+  if (err1) {
+    console.error('Failed to complete future accepted sessions:', err1);
+    return res.status(500).json({ error: 'Error completing sessions' });
+  }
+
+    connection.query(rejectPendingRequests, [id], err2 => {
+      if (err2) {
+        console.error('Failed to reject pending requests:', err2);
+        return res.status(500).json({ error: 'Error rejecting requests' });
+      }
+
+      connection.query(freeSpaces, [id], err3 => {
+        if (err3) {
+          console.error('Error freeing spaces:', err3);
+          return res.status(500).json({ error: 'Error releasing spaces' });
+        }
+
+        connection.query(deleteQuery, [id], (err4, result) => {
+          if (err4) {
+            console.error('Error deleting user:', err);
+            return res.status(500).json({ error: 'Failed to delete user' });
+          }
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ error: 'User not found' });
+            }
+            res.json({ message: 'User deleted successfully' });
+          });
+      });
+    });
   });
 });
 
