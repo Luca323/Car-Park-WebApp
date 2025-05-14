@@ -208,6 +208,26 @@ window.addEventListener("DOMContentLoaded", () => {
     breakdownSection.appendChild(ul);
   }
 
+  async function sendEmailForRequest(userID, subject, text) {
+  try {
+    const res = await fetch(`/api/users/${userID}/email`);
+    const data = await res.json();
+    if (!res.ok || !data.email) throw new Error("Email not found");
+
+    await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: data.email,
+        subject,
+        text
+      })
+    });
+  } catch (err) {
+    console.error("Failed to send email:", err);
+  }
+}
+
   async function updateRequests() { //Function to show the requests made by users to the admin
     requestsSection.innerHTML = `<h2>Parking Requests</h2>`;
     try {
@@ -265,6 +285,11 @@ window.addEventListener("DOMContentLoaded", () => {
           alert("Request accepted and space reserved");
           await updateDashboard();
           await updateRequests();
+          await sendEmailForRequest(
+            req.userID,
+            "Parking Request Approved",
+            `Your parking request for ${new Date(req.startDate).toLocaleString()} has been approved.`
+          );
         };
 
         const rejectBtn = document.createElement("button"); //Logic for rejection of requests
@@ -278,6 +303,11 @@ window.addEventListener("DOMContentLoaded", () => {
           alert("Request rejected");
           await updateRequests();
           await updateDashboard();
+          await sendEmailForRequest(
+            req.userID,
+            "Parking Request Rejected",
+            `Your parking request for ${new Date(req.startDate).toLocaleString()} was rejected.`
+          );
         };
 
         li.appendChild(acceptBtn);

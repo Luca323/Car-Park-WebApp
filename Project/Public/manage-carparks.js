@@ -29,6 +29,18 @@ window.addEventListener("DOMContentLoaded", () => {
       <a href="#" id="logout-link">Logout</a>
     `;
     document.body.appendChild(nav);
+
+    const navToggle = document.getElementById("hamburger");
+    const navLinks = document.getElementById("nav-links");
+
+    if (navToggle && navLinks) {
+      navToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show");
+
+        navToggle.classList.toggle("fa-bars");
+        navToggle.classList.toggle("fa-xmark");
+      });
+    }
   
     //Creating the main container & form section
     const container = document.createElement("div");

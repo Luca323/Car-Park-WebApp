@@ -35,17 +35,6 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    const navToggle = document.getElementById("hamburger");
-    const navLinks = document.getElementById("nav-links");
-
-    if (navToggle && navLinks) {
-        navToggle.addEventListener("click", () => {
-        navLinks.classList.toggle("show");
-
-        navToggle.classList.toggle("fa-bars");
-        navToggle.classList.toggle("fa-xmark");
-        });
-    }
 
     //Creating main container
     const container = document.createElement("div");

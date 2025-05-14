@@ -41,17 +41,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const navToggle = document.getElementById("hamburger");
-  const navLinks = document.getElementById("nav-links");
-
-  if (navToggle && navLinks) {
-    navToggle.addEventListener("click", () => {
-      navLinks.classList.toggle("show");
-
-      navToggle.classList.toggle("fa-bars");
-      navToggle.classList.toggle("fa-xmark");
-    });
-  }
 
   //Logout logic 
   document.getElementById("logout-link").addEventListener("click", async (e) => {

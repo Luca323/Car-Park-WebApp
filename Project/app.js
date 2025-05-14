@@ -4,6 +4,7 @@ const path = require('path');
 const app = express();
 const nodemailer = require('nodemailer');
 const session = require('express-session');
+app.use(express.static(path.join(__dirname, 'Public')));
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -620,6 +621,29 @@ app.post('/api/requests/:id/departure', (req, res) => { //If user departs, set s
   });
 });
 
+app.post('/api/send-email', (req, res) => {
+  const { to, subject, text } = req.body;
+
+  if (!to || !subject || !text) {
+    return res.status(400).json({ error: 'Missing email details' });
+  }
+
+  const mailOptions = {
+    from: '"ParkEase" <chopseven@gmail.com>',
+    to,
+    subject,
+    text
+  };
+
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error('Error sending email:', err);
+      return res.status(500).json({ error: 'Failed to send email' });
+    }
+    res.status(200).json({ message: 'Email sent successfully' });
+  });
+});
+
 //============================ Notifications =================================================
 
 app.post('/api/notify', (req, res) => { //Endpoint for admin-sent notifications
@@ -953,6 +977,19 @@ app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
   });
 });
 
+app.get('/api/users/:id/email', (req, res) => {
+  const userId = req.params.id;
+
+  const query = 'SELECT Email FROM logininfo WHERE UserID = ?';
+  connection.query(query, [userId], (err, results) => {
+    if (err || results.length === 0) {
+      console.error("Email lookup error:", err);
+      return res.status(500).json({ error: "Failed to retrieve email" });
+    }
+
+    res.json({ email: results[0].Email });
+  });
+});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
