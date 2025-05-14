@@ -311,17 +311,6 @@ header .logo {
   margin-bottom: 10px;
 }
 
-@media (max-width: 1024px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
 /* Admin dashboard */
 
 .admin-top-grid {
@@ -447,12 +436,21 @@ button:hover,
     background-color: #f2dede;
 }
 
-/* ============================= */
-/* 📱 Mobile Styling (max 780px) */
-/* ============================= */
-@media (max-width: 780px) {
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
-  /* Global padding & font tweaks */
+@media (max-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =============== Mobile Styling (max 780px) ===============  */
+
+@media (max-width: 780px) {
   body {
     padding: 0;
     margin: 0;
