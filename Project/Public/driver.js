@@ -17,6 +17,7 @@ window.addEventListener("DOMContentLoaded", () => {
       <a href="/driverdashboard" class="active">Dashboard</a>
       <a href="/bookparking">Book Parking</a>
       <a href="/contactus">Contact Us</a>
+      <a href="/account">Account</a>
       <a href="#" id="logout-link">Logout</a>
     `;
     document.body.appendChild(nav);

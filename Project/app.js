@@ -83,6 +83,10 @@ app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'register.html'));
 });
 
+app.get('/account', (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'account.html'));
+});
+
 
 app.use(express.json());
 
@@ -796,6 +800,61 @@ app.post('/api/contact', (req, res) => {
       return res.status(500).json({ error: 'Failed to send message' });
     }
     res.json({ message: 'Message sent successfully' });
+  });
+});
+
+//account details 
+// Get account details
+app.get('/api/account', requireLogin, (req, res) => {
+  const query = 'SELECT Email, PhoneNum AS phone, CarNum AS regNum FROM logininfo WHERE UserID = ?';
+  connection.query(query, [req.session.UserID], (err, results) => {
+    if (err || results.length !== 1) {
+      return res.status(500).json({ error: "Failed to load account info" });
+    }
+    res.json(results[0]);
+  });
+});
+
+// Verify password before editing
+app.post('/api/account/verify', requireLogin, (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: "Password required" });
+
+  const query = 'SELECT Passkey FROM logininfo WHERE UserID = ?';
+  connection.query(query, [req.session.UserID], async (err, results) => {
+    if (err || results.length !== 1) return res.status(500).json({ error: "DB error" });
+
+    const valid = await bcrypt.compare(password, results[0].Passkey);
+    if (!valid) return res.status(401).json({ error: "Incorrect password" });
+
+    res.json({ message: "Password verified" });
+  });
+});
+
+// Update account details
+app.put('/api/account', requireLogin, (req, res) => {
+  const { email, phone, regNum } = req.body;
+
+  // check if email is already used by another account
+  const checkQuery = 'SELECT UserID FROM logininfo WHERE Email = ? AND UserID != ?';
+  connection.query(checkQuery, [email, req.session.UserID], (err, results) => {
+    if (err) {
+      console.error("Email check error:", err);
+      return res.status(500).json({ error: "Failed to validate email" });
+    }
+
+    if (results.length > 0) {
+      return res.status(409).json({ error: "That email is already in use by another account" });
+    }
+
+    const updateQuery = 'UPDATE logininfo SET Email = ?, PhoneNum = ?, CarNum = ? WHERE UserID = ?';
+    connection.query(updateQuery, [email, phone, regNum, req.session.UserID], (err, result) => {
+      if (err2) {
+        console.error("Account update error:", err2);
+        return res.status(500).json({ error: "Failed to update account" });
+      }
+      res.json({ message: "Account updated" });
+    });
   });
 });
 
