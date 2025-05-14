@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Creating and appending the header and nav bar
+  //Nav bar
   const header = document.createElement("header");
 
   const logo = document.createElement("img");
@@ -18,18 +18,17 @@ window.addEventListener("DOMContentLoaded", () => {
     <a href="/managecarparks">Manage Car Parks</a>
     <a href="/managespaces">Manage Spaces</a>
     <a href="/manageevents">Manage Events</a>
-    <a href="/manageusers">Admin Manage Users</a>
+    <a href="/manageusers">Manage Users</a>
     <a href="/sendnotif">Send Notifications</a>
     <a href="#" id="logout-link">Logout</a>
   `;
   document.body.appendChild(nav);
 
-  // Creating the main dashboard container
+  //Main container for dashboard
   const container = document.createElement("div");
   container.className = "dashboard";
   document.body.appendChild(container);
 
-// Creating the sections for dashboard info
   const summarySection = document.createElement("div");
   summarySection.className = "section";
   container.appendChild(summarySection);
@@ -47,7 +46,7 @@ window.addEventListener("DOMContentLoaded", () => {
   container.appendChild(spaceListSection);
 
 
-  //Logout logic
+  //Logout
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -67,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Function that gets the current parking space stats 
+  //Retrieve current parking space stats from middleware/backend
   async function updateDashboard() {
     await fetch("/api/cleanup-expired", { method: "POST" });
 
@@ -115,7 +114,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const expiredRequest = requests.find(r =>
           r.SpaceID === space.SpaceID &&
           r.status === "accepted" &&
-          new Date(r.endDate) <= now
+          new Date(r.endDate) <= now //Finds requests that have expired past the current date
         );
 
         if (expiredRequest) {
@@ -131,11 +130,11 @@ window.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({ status: "completed", endDate: expiredRequest.endDate })
           });
       
-          space.Status = "Available";
+          space.Status = "Available"; //Resets space status after the space has expired
         }
       }
 
-      switch (space.Status) {
+      switch (space.Status) { //Switch case to tally up the statuses of spaces in carparks
         case "Available": available++; byCarPark[name].available++; break;
         case "Blocked": blocked++; byCarPark[name].blocked++; break;
         case "Reserved": reserved++; byCarPark[name].reserved++; break;
@@ -143,6 +142,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    //Display the tally
     summarySection.innerHTML = `
       <h2>Space Summary</h2>
       <ul>
@@ -170,7 +170,7 @@ window.addEventListener("DOMContentLoaded", () => {
     breakdownSection.appendChild(ul);
   }
 
-  async function updateRequests() {
+  async function updateRequests() { //Function to show the requests made by users to the admin
     requestsSection.innerHTML = `<h2>Parking Requests</h2>`;
     try {
       const [requestsRes, spacesRes] = await Promise.all([
@@ -196,9 +196,9 @@ window.addEventListener("DOMContentLoaded", () => {
           <strong>Date:</strong> ${new Date(req.startDate).toLocaleString()} → ${new Date(req.endDate).toLocaleString()}<br>
           <strong>Cost:</strong> £${req.cost}<br>
           <strong>Status:</strong> ${req.status.toUpperCase()}<br>
-        `;
+        `; //Cost is currently at £2 per hour as a test value
 
-        const acceptBtn = document.createElement("button");
+        const acceptBtn = document.createElement("button"); //Button stuff for accepting a request
         acceptBtn.textContent = "Accept";
         acceptBtn.onclick = async () => {
           const available = spaces.filter(s => s.CarparkName === req.carPark &&
@@ -212,16 +212,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
           const assigned = available[0];
 
-          await fetch(`/api/requests/${req.id}`, {
+          await fetch(`/api/requests/${req.id}`, { //Retrieve request from backend
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: "accepted", spaceId: assigned.SpaceID })
           });
 
-          await fetch(`/api/spaces/${assigned.SpaceID}`, {
+          await fetch(`/api/spaces/${assigned.SpaceID}`, { //Retrieves requested space
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "Reserved", userId: null })
+            body: JSON.stringify({ status: "Reserved", userId: null }) //Updates it to 'Reserved'
           });
 
           alert("Request accepted and space reserved");
@@ -229,10 +229,10 @@ window.addEventListener("DOMContentLoaded", () => {
           await updateRequests();
         };
 
-        const rejectBtn = document.createElement("button");
+        const rejectBtn = document.createElement("button"); //Logic for rejection of requests
         rejectBtn.textContent = "Reject";
         rejectBtn.onclick = async () => {
-          await fetch(`/api/requests/${req.id}`, {
+          await fetch(`/api/requests/${req.id}`, { //Fetch request
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: "rejected" })
@@ -253,7 +253,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function updateSpaceList() {
+  async function updateSpaceList() { //Updates spaces when a change is made
     const spacesRes = await fetch("/api/spaces");
     const spaces = await spacesRes.json();
   

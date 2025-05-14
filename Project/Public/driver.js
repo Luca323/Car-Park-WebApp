@@ -22,7 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
     `;
     document.body.appendChild(nav);
   
-    // Creating & Appending the main container for the dashboard
+    //Creating & Appending the main container for the dashboard
     const container = document.createElement("div");
     container.className = "dashboard";
     document.body.appendChild(container);
@@ -30,7 +30,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const grid = document.createElement("div");
     grid.className = "dashboard-grid";
       
-    // Creating & Appending Sections
+    //Creating & Appending Sections
     const currentSection = document.createElement("div");
     currentSection.className = "section";
     currentSection.innerHTML = "<h2>Current Sessions</h2>";
@@ -78,7 +78,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Loads all requests from DB
+    //Loads all requests from DB
     async function loadRequests() {
       const meRes = await fetch("/api/me");
       const { userID } = await meRes.json();
@@ -90,7 +90,7 @@ window.addEventListener("DOMContentLoaded", () => {
       return allRequests.filter(r => r.userID === userID);
     }
   
-    // Building the UI element for each parking session
+    //Building the UI element for each parking session
     function createSessionItem(request, showNotifyBtn = false) {
         const li = document.createElement("li");
         const now = new Date();
@@ -105,7 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
           <strong>Cost:</strong> £${request.cost}<br>
         `;
       
-        // Add Notify Departure button - only for current accepted sessions
+        //Add Notify Departure button - only for current accepted sessions
         if (showNotifyBtn && request.status === "accepted") {
           const notifyBtn = document.createElement("button");
           notifyBtn.textContent = "Notify Departure";
@@ -124,7 +124,7 @@ window.addEventListener("DOMContentLoaded", () => {
           
               if (res.ok) {
                 alert(data.message || "Departure successfully notified.");
-                await renderSessions(); // re-render dashboard instead of reloading
+                await renderSessions(); //re-render dashboard instead of reloading
               } else {
                 alert("Failed to notify departure: " + (data.error || "Unknown error"));
               }
@@ -137,7 +137,7 @@ window.addEventListener("DOMContentLoaded", () => {
           li.appendChild(notifyBtn);
         }
       
-        // Add Locate Parking Space button - only for upcoming sessions
+        //Add Locate Parking Space button - only for upcoming accepted sessions
         const isUpcoming =
           request.status === "accepted" &&
           new Date(request.startDate) > now;
@@ -157,31 +157,31 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       
   
-    // Function to render each section of the dashboard
+    //Function to render the GUI of each section of the dashboard
     async function renderSessions() {
         const now = new Date();
         const allRequests = await loadRequests();
         window.allRequests = allRequests;
         console.log("ALL REQUESTS", allRequests);
       
-        // Filters current sessions
+        //Filters current sessions
         const current = allRequests.filter(r =>
           r.status?.toLowerCase() === "accepted" &&
           new Date(r.startDate) <= now &&
           new Date(r.endDate) > now
         );
       
-        // Filters upcoming accepted sessions
+        //Filters upcoming accepted sessions
         const upcoming = allRequests.filter(r =>
           r.status?.toLowerCase() === "accepted" &&
           new Date(r.startDate) > now
         );
         console.log("Upcoming sessions:", upcoming);
       
-        // Filters pending sessions
+        //Filters pending sessions
         const pending = allRequests.filter(r => r.status === "pending");
       
-        // Filters past sessions 
+        //Filters past sessions 
         const past = allRequests.filter(r =>
           r.status?.toLowerCase() === "completed" ||
           (r.status?.toLowerCase() === "accepted" && new Date(r.endDate) <= now)
@@ -193,10 +193,10 @@ window.addEventListener("DOMContentLoaded", () => {
           return dateB - dateA;
         });
 
-        // Takes the 3 most recent past sessions
+        //Takes the 3 most recent past sessions
         const recentPast = past.slice(0, 3);
       
-        // Clears & Updates each section
+        //Clears & Updates each section
         currentList.innerHTML = "";
         upcomingList.innerHTML = "";
         pendingList.innerHTML = "";
@@ -227,6 +227,6 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
   
-    // Initial rendering
+    //Initial render
     renderSessions();
   });

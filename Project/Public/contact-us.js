@@ -74,7 +74,7 @@ window.addEventListener("DOMContentLoaded", () => {
     messageInput.required = true;
     messageInput.className = "text-input";
   
-    // Submit button
+    //Submit button
     const submitBtn = document.createElement("button");
     submitBtn.type = "submit";
     submitBtn.textContent = "Send Message";
@@ -82,12 +82,12 @@ window.addEventListener("DOMContentLoaded", () => {
     const confirmation = document.createElement("div");
     confirmation.className = "confirmation";
   
-    // Appends input fields to the form, the form to the section, & section to the container
+    //Appends input fields to the form, the form to the section, & section to the container
     form.append(nameInput, emailInput, messageInput, submitBtn);
     section.append(form, confirmation);
     container.appendChild(section);
   
-    // Handles form submission
+    //Form submission
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
   
@@ -98,14 +98,14 @@ window.addEventListener("DOMContentLoaded", () => {
         time: new Date().toISOString()
       };
   
-      // Validation checks
+      //Validation checks
       if (!message.name || !message.email || !message.content) {
         alert("Please fill in all fields.");
         return;
       }
   
       try {
-        const res = await fetch("/api/contact", {
+        const res = await fetch("/api/contact", { //Sends from info to the backend for handling
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
