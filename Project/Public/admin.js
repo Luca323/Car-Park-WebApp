@@ -276,7 +276,7 @@ window.addEventListener("DOMContentLoaded", () => {
     await updateRequests();
     await updateSpaceList();
 
-    setInterval(() => {
+    setInterval(() => { //Refreshes the page data every so often
       updateDashboard();
       updateSpaceList();
     }, 15* 1000);

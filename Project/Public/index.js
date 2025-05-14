@@ -18,7 +18,7 @@ window.addEventListener("DOMContentLoaded", () => {
     header.append(logo,title, nav);
     document.body.appendChild(header);
 
-    // Creating main container
+    //Creating main container
     const container = document.createElement("div");
     container.className = "home-container";
 

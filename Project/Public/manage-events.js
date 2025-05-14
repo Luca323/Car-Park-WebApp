@@ -1,6 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Creating and appending the header and nav bar
-  //save
+  //Creating and appending the header and nav bar
   const header = document.createElement("header");
   
   const logo = document.createElement("img");
@@ -25,7 +24,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  // Creating main container & event section
+  //Creating main container & event section
   const container = document.createElement("div");
   container.className = "dashboard";
   document.body.appendChild(container);
@@ -34,7 +33,7 @@ window.addEventListener("DOMContentLoaded", () => {
   section.className = "section";
   section.innerHTML = `<h2>Schedule New Event</h2>`;
 
-  //Logout logic
+  //Logout
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -54,14 +53,14 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Car park selection dropdown
+  //Car park selection dropdown
   const carParkSelect = document.createElement("select");
   carParkSelect.className = "event-input";
 
-  // Loads car parks from local storage (needs to be DB)
+  //Loads car parks from local storage (needs to be DB)
   let carParks = [];
 
-  fetch('/api/carparks')
+  fetch('/api/carparks') //Fetch carparks from backend by ID
     .then(res => res.json())
     .then(data => {
       carParks = data;
@@ -82,7 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
   carParkSelect.appendChild(defaultOption);
 
 
-  // Creating input fields for the event data
+  //Creating input fields for the event data
   const titleInput = document.createElement("input");
   titleInput.type = "text";
   titleInput.placeholder = "Event Title";
@@ -94,14 +93,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const endDateInput = document.createElement("input");
   endDateInput.type = "datetime-local";
 
-  // Button to submit event
+  //Button to submit event
   const addBtn = document.createElement("button");
   addBtn.textContent = "Create Event";
 
-  // List for existing events
+  //List for existing events
   const eventList = document.createElement("ul");
 
-  // Appends all inputs & button to event section
+  //Appends all inputs & button to event section
   section.append(
     carParkSelect,
     titleInput, startDateInput, endDateInput,
@@ -113,21 +112,20 @@ window.addEventListener("DOMContentLoaded", () => {
   container.appendChild(section);
 
   async function loadEvents() {
-    const res = await fetch('/api/events');
+    const res = await fetch('/api/events'); //Retrieve events from backend
     return await res.json();
   }
   
   async function saveEvent({ title, startDate, endDate, carParkId }) {
-    const event = {
+    const event = { //Create event as object
       EventID: `event-${Date.now()}`,
       Title: title,
       Start: startDate,
       End: endDate,
       CarparkID: carParkId,
-      // reservedSpaces: reservedSpaces
     };
   
-    const res = await fetch('/api/events', {
+    const res = await fetch('/api/events', { //Send object to backend
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(event)
@@ -136,7 +134,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return await res.json();
   }
 
-  // Function to render a list of scheduled events
+  //Function to render UI for a list of scheduled events
   async function renderEvents() {
     const events = await loadEvents();
     eventList.innerHTML = "";
@@ -157,13 +155,13 @@ window.addEventListener("DOMContentLoaded", () => {
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
       delBtn.onclick = async () => {
-        if (!confirm("Delete this event and release its spaces?")) return;
+        if (!confirm("Delete this event and release its spaces?")) return; //Button to erase event and free any related spaces
         await fetch(`/api/events/${ev.EventID}/release`, { method: "POST" });
         await fetch(`/api/events/${ev.EventID}`, { method: "DELETE" });
         renderEvents();
       };
 
-      const blockBtn = document.createElement("button");
+      const blockBtn = document.createElement("button"); //Button for blocking spaces related to the event
       blockBtn.textContent = "Block Spaces";
       blockBtn.onclick = async () => {
         const count = parseInt(prompt("How many spaces to block?"), 10);
@@ -200,7 +198,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Handles form submission 
+  //Handles form submission 
   addBtn.onclick = async () => {
     const title = titleInput.value.trim();
     const startDate = startDateInput.value;
@@ -222,20 +220,20 @@ window.addEventListener("DOMContentLoaded", () => {
   
     if (result.message) {
       alert(result.message);
-      renderEvents(); // refresh the list
+      renderEvents(); //refresh the list
     } else {
       alert("Failed to create event.");
       console.error(result);
     }
   
-    // Reset form fields
+    //Reset form fields
     titleInput.value = "";
     startDateInput.value = "";
     endDateInput.value = "";
     carParkSelect.value = "";
   };
 
-  // Initial render of any existing events
+  //Initial render of any existing events
   renderEvents();
   
 });

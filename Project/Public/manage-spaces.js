@@ -24,7 +24,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  // Creating main container & section
+  //Creating main container & section
   const container = document.createElement("div");
   container.className = "dashboard";
 
@@ -32,7 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
   section.className = "section";
   section.innerHTML = `<h2>Block or Unblock Spaces</h2>`;
 
-  //Logout logic
+  //Logout
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -52,7 +52,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Dropdown for selecting car park
+  //Dropdown for selecting car park
   const carParkSelect = document.createElement("select");
   carParkSelect.className = "dropdown";
   const defaultOption = document.createElement("option");
@@ -63,7 +63,7 @@ window.addEventListener("DOMContentLoaded", () => {
   carParkSelect.appendChild(defaultOption);
   section.appendChild(carParkSelect);
   
-  // Dropdown to filter by space status
+  //Dropdown to filter by space status
   const filterSelect = document.createElement("select");
   filterSelect.className = "dropdown";
   ["All", "Available", "Blocked", "Reserved"].forEach(status => {
@@ -75,55 +75,54 @@ window.addEventListener("DOMContentLoaded", () => {
   section.appendChild(document.createTextNode(" Filter by status: "));
   section.appendChild(filterSelect);
 
-  // Input field to search by Space ID
+  //Input field to search by Space ID
   const searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.placeholder = "Search by Space ID";
   section.appendChild(searchInput);
 
-  // List element to show filtered spaces
+  //List element to show filtered spaces
   const spaceList = document.createElement("ul");
   spaceList.className = "space-list";
   section.appendChild(spaceList);
 
-  // Appends section & container to body
+  //Appends section & container to body
   container.appendChild(section);
   document.body.appendChild(container);
 
-  // Loads car parks from local storage (needs to be DB)
+  //Loads car parks from DB
   let carParks = [];
+  fetch('/api/carparks')
+    .then(res => res.json())
+    .then(data => {
+      carParks = data;
+      data.forEach(park => {
+        const option = document.createElement("option");
+        option.value = park.CarparkID;
+        option.textContent = park.Name;
+        carParkSelect.appendChild(option);
+      });
+    })
+    .catch(err => console.error("Failed to load car parks:", err));
 
-fetch('/api/carparks')
-  .then(res => res.json())
-  .then(data => {
-    carParks = data;
-    data.forEach(park => {
-      const option = document.createElement("option");
-      option.value = park.CarparkID;
-      option.textContent = park.Name;
-      carParkSelect.appendChild(option);
-    });
-  })
-  .catch(err => console.error("Failed to load car parks:", err));
-
-  async function fetchSpaces(carparkId) {
+  async function fetchSpaces(carparkId) { //Retrieves spaces by carpark ID
     const res = await fetch(`/api/spaces1?carparkId=${carparkId}`);
     return await res.json();
   };
 
-  // Function to render space list based on selected car park & filters
+  //Function to render space list based on selected car park & filters
   async function renderSpaces(carParkId, filterStatus = "all") {
     spaceList.innerHTML = "";
   
     let spaces = await fetchSpaces(carParkId);
   
     
-    // Filter by status
+    //Filter by status
     if (filterStatus !== "all") {
       spaces = spaces.filter(s => s.Status.toLowerCase() === filterStatus);
     }
   
-    // Search
+    //Search logic
     const searchText = searchInput.value.trim().toLowerCase();
     if (searchText !== "") {
       spaces = spaces.filter(s => s.SpaceID.toString().toLowerCase().includes(searchText));
@@ -134,7 +133,7 @@ fetch('/api/carparks')
       return;
     }
   
-    // Render spaces
+    //Render spaces for UI
     spaces.forEach(space => {
       const li = document.createElement("li");
       li.innerHTML = `
@@ -156,7 +155,7 @@ fetch('/api/carparks')
     });
   }
 
-  async function updateSpaceStatus(spaceId, status) {
+  async function updateSpaceStatus(spaceId, status) { //Change status of a space
     const res = await fetch(`/api/spaces/${spaceId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -171,7 +170,7 @@ fetch('/api/carparks')
     }
   }
 
-  // Saves updates spaces to local storage and refreshes space list (needs to be db)
+  //Saves updates spaces to local storage and refreshes space list (needs to be db)
   async function updateAndRerender(spaceId, newStatus) {
     try {
       const res = await fetch(`/api/spaces/${spaceId}`, {
@@ -191,7 +190,7 @@ fetch('/api/carparks')
     }
   }
 
-  // Event listeners for dropdowns & search input
+  //Event listeners for dropdowns & search input
   carParkSelect.onchange = () => {
     renderSpaces(carParkSelect.value, filterSelect.value);
   };

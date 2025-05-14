@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Header & nav bar
+  //Header & nav bar
   const header = document.createElement("header");
   const logo = document.createElement("img"); logo.src = "logo.png"; logo.className = "logo";
   const title = document.createElement("h1"); title.textContent = "ParkEase";
@@ -17,21 +17,21 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  // Logout logic
+  //Logout logic
   document.getElementById("logout-link").addEventListener("click", async (e) => {
     e.preventDefault();
     await fetch("/logout", { method: "POST", credentials: "include" });
     location.href = "/";
   });
 
-  // Main container
+  //Main container
   const container = document.createElement("div"); container.className = "dashboard";
   document.body.appendChild(container);
 
   const section = document.createElement("div"); section.className = "section";  section.innerHTML = '<h2>Admin Manage Users</h2>';
   container.appendChild(section);
 
-  // Build table for users
+  //Build table for users
   const table = document.createElement("table");
   table.className = "user-table";
   const thead = document.createElement("thead");
@@ -51,7 +51,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const tbody = document.createElement("tbody");
   section.appendChild(table);
   table.appendChild(tbody);
-  // Fetch & render users into table
+  //Fetch & render users into table
   async function loadUsers() {
     try {
       const res = await fetch("/api/users", { credentials: "include" });
@@ -61,7 +61,7 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const users = await res.json();
-    // Populate rows
+    //Populate rows
     tbody.innerHTML = users.length
       ? users.map(u => `
           <tr>
@@ -75,13 +75,13 @@ window.addEventListener("DOMContentLoaded", () => {
             <td><button data-id="${u.UserID}">Remove</button></td>
           </tr>
         `).join('')
-      : '<tr><td colspan="7">No users found.</td></tr>';    // Attach remove handlers
+      : '<tr><td colspan="7">No users found.</td></tr>';    //Attach remove handlers
     tbody.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!confirm('Are you sure you want to remove this user?')) return;
         const id = btn.dataset.id;
         try {
-          const del = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+          const del = await fetch(`/api/users/${id}`, { method: 'DELETE' }); //middleware delete request
           if (del.ok) loadUsers();
           else {
             const error = await del.json();

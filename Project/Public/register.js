@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Adds a class to the body for styling
+  //Adds a class to the body for styling
   document.body.classList.add("login-reg-page");
 
   const header = document.createElement("header");
@@ -12,7 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const title = document.createElement("h1");
   title.textContent = "ParkEase";
 
-  const nav = document.createElement("nav");
+  const nav = document.createElement("nav"); //Registration/login page uses a different, simpler nav bar
   nav.innerHTML = `
       <a href="/">Home</a>
       <a href="/login">Login</a>
@@ -21,17 +21,17 @@ window.addEventListener("DOMContentLoaded", () => {
   header.append(logo, title, nav);
   document.body.appendChild(header);
 
-  // Creating the main container & the header
+  //Creating the main container & the header
   const container = document.createElement("div");
   container.className = "container";
 
   const heading = document.createElement("h2");
   heading.textContent = "Registration";
 
-  // Creating the register form 
+  //Creating the register form 
   const form = document.createElement("form");
   
-  // Creating input fieldss
+  //Creating input fieldss
   const nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.placeholder = "Create Username";
@@ -61,7 +61,7 @@ window.addEventListener("DOMContentLoaded", () => {
   submitBtn.type = "submit";
   submitBtn.textContent = "Register";
 
-  // Append inputs to the form
+  //Append inputs to the form
   form.append(nameInput, regInput, contactInput, emailInput, passInput, submitBtn);
   container.append(heading, form);//
   
@@ -69,7 +69,7 @@ window.addEventListener("DOMContentLoaded", () => {
   main.appendChild(container);
   document.body.appendChild(main);
 
-  // Handles form submit logic
+  //Handles form submit logic
   form.onsubmit = async (e) => {
     e.preventDefault();
 
@@ -83,7 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/register', {
+      const response = await fetch('http://localhost:8080/register', { //Attempts to create account
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -94,8 +94,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message);
-        location.href = '/login';
+        alert(data.message); //asks users to verify their accounts
+        location.href = '/login'; //Sends user to login page on success
       } else {
         alert(data.error || 'Registration failed');
       }

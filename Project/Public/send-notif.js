@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-  // Creating and appending the header and nav bar
+  //Creating and appending the header and nav bar
   const header = document.createElement("header");
   
   const logo = document.createElement("img");
@@ -24,7 +24,7 @@ window.addEventListener("DOMContentLoaded", () => {
   `;
   document.body.appendChild(nav);
 
-  // Creating the main container & section
+  //Creating the main container & section
   const container = document.createElement("div");
   container.className = "dashboard";
 
@@ -34,7 +34,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const heading = document.createElement("h2");
   heading.textContent = "Notify Users";
 
-  //Logout logic
+  //Logout button
   const logoutLink = document.getElementById("logout-link");
   logoutLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -54,16 +54,16 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Creating the input text area 
+  //Creating the input text area 
   const textarea = document.createElement("textarea");
   textarea.placeholder = "Enter notification message...";
   textarea.className = "text-input";
 
-  // Status message element
+  //Status message element
   const statusMessage = document.createElement("p");
   statusMessage.className = "status-message";
   
-  // Button to send notification
+  //Button to send notification
   const button = document.createElement("button");
   button.className = "btn";
   button.textContent = "Send Notification";
@@ -110,33 +110,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Appends all elements
+  //Appends all elements
   section.append(heading, textarea, button, statusMessage);
   container.appendChild(section);
   document.body.appendChild(container);
 
-  //DO WE NEED THIS? ITS NEVER CALLED??
-  async function sendEmailNotification(message) {
-    try {
-      const response = await fetch('/api/send-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_AUTH_TOKEN' // if needed
-        },
-        body: JSON.stringify({ message })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      throw error;
-    }
-  }
 });
   
   
