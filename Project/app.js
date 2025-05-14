@@ -83,6 +83,9 @@ app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'Public', 'register.html'));
 });
 
+app.get('/manageusers', requireLogin, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'Public', 'manage-users.html'));
+});
 
 app.use(express.json());
 
@@ -796,6 +799,40 @@ app.post('/api/contact', (req, res) => {
       return res.status(500).json({ error: 'Failed to send message' });
     }
     res.json({ message: 'Message sent successfully' });
+  });
+});
+
+// ========================== Manage Users ==========================
+app.get('/api/users', requireLogin, requireAdmin, (req, res) => {
+  // Removed CreatedAt since logininfo has no such column. To track registration date, add a CreatedAt TIMESTAMP column to logininfo.
+  const query = 'SELECT UserID, Username, Email, Type, PhoneNum, CarNum, Verified FROM logininfo';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching users:', err);
+      return res.status(500).json({ error: 'Failed to retrieve users' });
+    }
+    res.json(results);
+  });
+});
+
+app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  
+  // Prevent admin from deleting own account
+  if (Number(id) === Number(req.session.UserID)) {
+    return res.status(403).json({ error: 'Cannot delete your own admin account' });
+  }
+  
+  const deleteQuery = 'DELETE FROM logininfo WHERE UserID = ?';
+  connection.query(deleteQuery, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting user:', err);
+      return res.status(500).json({ error: 'Failed to delete user' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ message: 'User deleted successfully' });
   });
 });
 
