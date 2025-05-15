@@ -137,7 +137,7 @@ const loginLimiter = rateLimit({
 //============================ Login/Register/Logout ================================================
 const bcrypt = require('bcrypt');
 
-// Function to track failed login attempts
+//Function to track failed login attempts
 function trackFailedLogin(ip) {
   if (!failedLogins[ip]) {
     failedLogins[ip] = 1;
@@ -145,30 +145,25 @@ function trackFailedLogin(ip) {
     failedLogins[ip]++;
   }
 
-  // If failed attempts reach the threshold, block the IP for 15 minutes
   if (failedLogins[ip] >= 6) {
-    const blockUntil = Date.now() + (15 * 60 * 1000); // 15 minutes from now
+    const blockUntil = Date.now() + (15 * 1000);
     blockedIPs[ip] = blockUntil;
-    
-    // Log the block for security monitoring
+  
     console.log(`IP ${ip} blocked until ${new Date(blockUntil).toLocaleString()} due to multiple failed login attempts`);
   }
 }
 
-// Middleware to check for IP blocks
 function checkIPBlock(req, res, next) {
   const clientIP = req.ip;
   
   if (blockedIPs[clientIP]) {
     const currentTime = Date.now();
     if (currentTime < blockedIPs[clientIP]) {
-      // Calculate remaining time in minutes
-      const remainingTimeMinutes = Math.ceil((blockedIPs[clientIP] - currentTime) / (60 * 1000));
+      const remainingTimeSeconds = Math.ceil((blockedIPs[clientIP] - currentTime) / (60 * 1000));
       return res.status(429).json({ 
-        error: `Too many login attempts. Please try again after ${remainingTimeMinutes} minutes.`
+        error: `Too many login attempts. Please try again after ${remainingTimeSeconds} seconds.`
       });
     } else {
-      // Lockout period has expired
       delete blockedIPs[clientIP];
       delete failedLogins[clientIP];
     }
