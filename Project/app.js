@@ -119,45 +119,99 @@ app.get("/", (req, res) => {
 //============================ Brute force prevention for login ==============================
 const rateLimit = require('express-rate-limit');
 
-// Create a limiter for login attempts
+// Track failed login attempts and lockout times by IP
+const failedLogins = {};
+const blockedIPs = {};
+
+// Create a limiter for login attempts - this is a basic rate limiter
+// Our custom implementation will provide the actual 15-minute lockout
 const loginLimiter = rateLimit({
-  windowMs: 15 * 1000, 
-  max: 5, 
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 6, 
   message: {
-    error: 'Too many login attempts. Please try again after 15 seconds.'
+    error: 'Too many login attempts. Please try again after 15 minutes.'
   },
   standardHeaders: true, 
-  legacyHeaders: false, 
+  legacyHeaders: false,
+  skipSuccessfulRequests: false, // Track all requests, including successful ones
 });
 
 //============================ Login/Register/Logout ================================================
 const bcrypt = require('bcrypt');
 
+// Function to track failed login attempts
+function trackFailedLogin(ip) {
+  if (!failedLogins[ip]) {
+    failedLogins[ip] = 1;
+  } else {
+    failedLogins[ip]++;
+  }
+
+  // If failed attempts reach the threshold, block the IP for 15 minutes
+  if (failedLogins[ip] >= 6) {
+    const blockUntil = Date.now() + (15 * 60 * 1000); // 15 minutes from now
+    blockedIPs[ip] = blockUntil;
+    
+    // Log the block for security monitoring
+    console.log(`IP ${ip} blocked until ${new Date(blockUntil).toLocaleString()} due to multiple failed login attempts`);
+  }
+}
+
+// Middleware to check for IP blocks
+function checkIPBlock(req, res, next) {
+  const clientIP = req.ip;
+  
+  if (blockedIPs[clientIP]) {
+    const currentTime = Date.now();
+    if (currentTime < blockedIPs[clientIP]) {
+      // Calculate remaining time in minutes
+      const remainingTimeMinutes = Math.ceil((blockedIPs[clientIP] - currentTime) / (60 * 1000));
+      return res.status(429).json({ 
+        error: `Too many login attempts. Please try again after ${remainingTimeMinutes} minutes.`
+      });
+    } else {
+      // Lockout period has expired
+      delete blockedIPs[clientIP];
+      delete failedLogins[clientIP];
+    }
+  }
+  next();
+}
+
 //Login endpoint
-app.post('/login', loginLimiter, (req, res) => {
+app.post('/login', checkIPBlock, loginLimiter, (req, res) => {
   const { username, passkey } = req.body;
+  const clientIP = req.ip;
+  
   if (!username || !passkey) {
     return res.status(400).json({ error: 'Username and password required' });  
   }
-  
 
   const query = 'SELECT UserID, Passkey, Type, Verified FROM logininfo WHERE Username = ?';
   connection.query(query, [username], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
-    if (results.length !== 1) return res.status(401).json({ error: 'Invalid login' });
+    if (results.length !== 1) {
+      // Track failed login attempt
+      trackFailedLogin(clientIP);
+      return res.status(401).json({ error: 'Invalid login' });
+    }
     if (Number(results[0].Verified) !== 1) { //Checks users are verified
       return res.status(403).json({ error: 'Please verify your email before logging in' });
     }
     
-
     const storedHash = results[0].Passkey;
     const match = await bcrypt.compare(passkey, storedHash); //Compares password to hashed value in sql
 
     if (match) {
+      // Reset failed login attempts on successful login
+      delete failedLogins[clientIP];
+      
       req.session.UserID = results[0].UserID; //Checks ID is also equal
       req.session.Type = results[0].Type; 
       return res.status(200).json({ message: 'Login successful', Type: results[0].Type });
     } else {
+      // Track failed login attempt
+      trackFailedLogin(clientIP);
       return res.status(401).json({ error: 'Invalid login' });
     }
   });
