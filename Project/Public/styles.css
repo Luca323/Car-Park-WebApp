@@ -1,4 +1,4 @@
-/* Reset some styles */
+/* RESET / BASE STYLES */
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +12,7 @@ body {
 }
 
 
-/* ==================HOME PAGE STYLING ======================*/
+/* HOME PAGE STYLING */
 .home-page header {
     display: flex;
     justify-content: space-between;
@@ -99,7 +99,7 @@ body {
     font-size: 16px;
 }
 
-/* Header */
+/* HEADER STYLING */
 header {
     display: flex;
     justify-content: center;
@@ -127,7 +127,7 @@ header .logo {
     height: 55px;
 }
 
-/* Login/Register Pages */
+/* LOGIN / REGISTER PAGES */
 .login-reg-page {
     display: flex;
     flex-direction: column;
@@ -175,7 +175,7 @@ header .logo {
     color: #cce9f3;
 }
 
-/* Hamburger Button */
+/* HAMBURGER MENU */
 .menu-toggle {
     background-color: #003366;
     color: white;
@@ -188,7 +188,7 @@ header .logo {
     text-align: right;
 }
 
-/* Navigation */
+/* NAV BAR */
 nav {
     background-color:transparent; /*#0056b3;*/
     display: flex;
@@ -244,7 +244,7 @@ header .logo {
     height: 55px;
 }
 
-/* Dashboard Content */
+/* CONTAINER/STYLING FOR MOST PAGES */
 .dashboard {
     max-width: auto;
     margin: 30px auto;
@@ -264,6 +264,8 @@ header .logo {
     margin-top: 0;
 }
 
+
+/* SCROLL STYLING FOR ADMIN DASH */
 .scroll-to-top {
   position: fixed;
   bottom: 20px;
@@ -281,7 +283,7 @@ header .logo {
   color: white;
 }
 
-/* driver dashboard styling */ 
+/* DRIVER DASHBOARD*/ 
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -312,8 +314,7 @@ header .logo {
   margin-bottom: 10px;
 }
 
-/* Admin dashboard */
-
+/* ADMIN DASHBOARD */
 .admin-top-grid {
   display: flex;
   justify-content: center;
@@ -359,7 +360,7 @@ header .logo {
   margin-bottom: 4px;
 }
 
-/* Input Styling */
+/* USER INPUT STYLING */
 input {
     width: 100%;
     padding: 10px;
@@ -374,7 +375,7 @@ input {
     width: 100%;
 }
 
-/* Button Styling */
+/* BUTTON STYLING */
 button,
 .btn {
     background-color: #003366;
@@ -394,7 +395,7 @@ button:hover,
     background-color: #002244;
 }
 
-/* User Table Styling */
+/* MANAGE USERS TABLE STYLING */
 .user-table {
     width: 100%;
     border-collapse: collapse;
@@ -437,6 +438,7 @@ button:hover,
     background-color: #f2dede;
 }
 
+/* FOOTER STYLING - INDEX,LOGIN,REGISTER PAGES */
 .site-footer {
   text-align: center;
   padding: 15px 0;
@@ -453,6 +455,7 @@ button:hover,
   margin-top: auto;
 }
 
+/* RESPONSIVE GRID STYLING */
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -465,8 +468,7 @@ button:hover,
   }
 }
 
-/* =============== Mobile Styling (max 780px) ===============  */
-
+/* SMALLER SCREEN STYLING ≤ 780px */
 @media (max-width: 780px) {
   body {
     padding: 0;
