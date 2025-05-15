@@ -68,6 +68,11 @@ window.addEventListener("DOMContentLoaded", () => {
     registerBtn.textContent = "Click here to register for an account!";
     registerBtn.className = "register-link"; 
 
+    const footer = document.createElement("footer");
+    footer.className = "site-footer";
+    footer.innerHTML = "&copy; 2025 Car Park Innovators. All rights reserved.";
+    
+
     
     //Appending
     form.append(usernameInput, passwordInput, submitBtn, registerBtn);
@@ -76,6 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const main = document.createElement("main");
     main.appendChild(container);
     document.body.appendChild(main);
+    document.body.appendChild(footer);
 
     //Handles form submission 
     form.onsubmit = async (e) => {

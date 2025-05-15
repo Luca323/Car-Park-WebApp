@@ -437,6 +437,22 @@ button:hover,
     background-color: #f2dede;
 }
 
+.site-footer {
+  text-align: center;
+  padding: 15px 0;
+  background-color: #274e97;
+  color: white;
+  font-size: 14px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  margin-top: 40px;
+}
+
+.login-reg-page .site-footer {
+  margin-top: auto;
+}
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);

@@ -63,8 +63,13 @@ window.addEventListener("DOMContentLoaded", () => {
     <li> Get notifications and updates about upcoming events</li>
     `;
 
+    const footer = document.createElement("footer");
+    footer.className = "site-footer";
+    footer.innerHTML = "&copy; 2025 Car Park Innovators. All rights reserved.";
+
     rightCol.append(intro, listFeatures);
 
     container.append(leftCol, rightCol);
     document.body.appendChild(container);
+    document.body.appendChild(footer);
 })
