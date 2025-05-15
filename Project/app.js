@@ -119,21 +119,19 @@ app.get("/", (req, res) => {
 //============================ Brute force prevention for login ==============================
 const rateLimit = require('express-rate-limit');
 
-// Track failed login attempts and lockout times by IP
+//Create a limiter for login attempts
 const failedLogins = {};
 const blockedIPs = {};
 
-// Create a limiter for login attempts - this is a basic rate limiter
-// Our custom implementation will provide the actual 15-minute lockout
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 6, 
+  windowMs: 15 * 1000,
+  max: 5, 
   message: {
     error: 'Too many login attempts. Please try again after 15 minutes.'
   },
   standardHeaders: true, 
   legacyHeaders: false,
-  skipSuccessfulRequests: false, // Track all requests, including successful ones
+  skipSuccessfulRequests: true, 
 });
 
 //============================ Login/Register/Logout ================================================
