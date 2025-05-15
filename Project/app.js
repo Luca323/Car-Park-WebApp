@@ -145,7 +145,7 @@ function trackFailedLogin(ip) {
     failedLogins[ip]++;
   }
 
-  if (failedLogins[ip] >= 6) {
+  if (failedLogins[ip] >= 5) {
     const blockUntil = Date.now() + (15 * 1000);
     blockedIPs[ip] = blockUntil;
   
@@ -159,7 +159,7 @@ function checkIPBlock(req, res, next) {
   if (blockedIPs[clientIP]) {
     const currentTime = Date.now();
     if (currentTime < blockedIPs[clientIP]) {
-      const remainingTimeSeconds = Math.ceil((blockedIPs[clientIP] - currentTime) / (60 * 1000));
+      const remainingTimeSeconds = Math.ceil((blockedIPs[clientIP] - currentTime) / (15 * 1000));
       return res.status(429).json({ 
         error: `Too many login attempts. Please try again after ${remainingTimeSeconds} seconds.`
       });
