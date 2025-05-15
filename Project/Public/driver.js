@@ -164,7 +164,7 @@ window.addEventListener("DOMContentLoaded", () => {
           locateBtn.textContent = "Locate Parking Spot";
           locateBtn.onclick = () => {
             const query = encodeURIComponent(request.carPark);
-            const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+            const url = `https://www.google.com/maps/search/?api=1&query=${query}` + "Car Park";
             window.open(url, "_blank");
           };
           li.appendChild(locateBtn);
