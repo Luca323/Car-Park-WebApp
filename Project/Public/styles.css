@@ -592,6 +592,12 @@ button:hover,
     margin: 0 auto;
   }
 
+  .home-page .features {
+    list-style-type: square;
+    width: fit-content;
+    margin: auto;
+  }
+
   .dashboard {
     padding: 10px;
     margin: 20px auto;

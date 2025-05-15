@@ -340,10 +340,31 @@ app.put('/api/carparks/:id', (req, res) => { //Designed for updating carparks
       if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Car park not found' });
       }
-  
-      res.json({ message: 'Car park updated' });
+
+      const getSpacesQuery = 'SELECT SpaceID FROM Spaces WHERE CarparkID = ? ORDER BY SpaceID';
+      connection.query(getSpacesQuery, [id], (err2, spaces) => {
+        if (err2) {
+          console.error('Failed to get spaces:', err2);
+          return res.status(500).json({ error: 'Error fetching spaces' });
+        }
+
+        if (spaces.length > size) {
+        const toDelete = spaces.slice(size).map(s => s.SpaceID);
+        const deleteQuery = 'DELETE FROM Spaces WHERE SpaceID IN (?)';
+        connection.query(deleteQuery, [toDelete], (err3) => {
+          if (err3) {
+            console.error('Error deleting extra spaces:', err3);
+            return res.status(500).json({ error: 'Failed to reduce space count' });
+          }
+
+          res.json({ message: 'Car park updated and spaces trimmed' });
+        });
+      } else {
+        res.json({ message: 'Car park updated' });
+      }
     });
   });
+});
 
   //not sure if this is ever used?
 app.delete('/api/spaces/:id', (req, res) => { //Deleting the spaces by id

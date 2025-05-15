@@ -163,6 +163,9 @@ window.addEventListener("DOMContentLoaded", () => {
             carParks[editingIndex].Name = name;
             carParks[editingIndex].Size = size;
             alert("Car park updated");
+            const refreshed = await fetch('./api/carparks');
+            carParks = await refreshed.json();
+            updateDropdown();
           } else {
             const data = await res.json();
             alert(data.error || "Update failed");
@@ -206,7 +209,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (selectedIndex === "") return;
     
       const selected = carParks[selectedIndex];
-      nameInput.value = selected.Name; //case-sensitive: match DB column
+      nameInput.value = selected.Name; 
       spaceInput.value = selected.Size;
       editingIndex = selectedIndex;
     };
