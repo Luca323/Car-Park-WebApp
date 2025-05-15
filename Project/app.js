@@ -977,7 +977,8 @@ app.delete('/api/users/:id', requireLogin, requireAdmin, (req, res) => {
   });
 });
 
-app.get('/api/users/:id/email', (req, res) => { //Finds user email by ID
+//Finds user email
+app.get('/api/users/:id/email', (req, res) => { 
   const userId = req.params.id;
 
   const query = 'SELECT Email FROM logininfo WHERE UserID = ?';

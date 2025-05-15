@@ -331,7 +331,7 @@ window.addEventListener("DOMContentLoaded", () => {
     spaceGrid.className = "space-grid";
 
 
-    // Group spaces by CarparkName
+    //Group spaces by Carpark Name
     const grouped = {};
     spaces.forEach(space => {
       if (!grouped[space.CarparkName]) {
@@ -360,21 +360,8 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     spaceListSection.appendChild(spaceGrid);
-  
-    // spaceListSection.innerHTML = "<h2>Space List</h2>";
-    // const list = document.createElement("ul");
-  
-    // spaces.forEach(space => {
-    //   const status = space.Status ? space.Status.toUpperCase() : (space.Occupied ? 'OCCUPIED' : 'AVAILABLE');
-    //   const li = document.createElement("li");
-    //   li.innerHTML = `
-    //     <strong>Space ${space.SpaceID}</strong> — ${space.CarparkName} — <em>${status}</em>
-    //   `;
-    //   list.appendChild(li);
-    // });
-  
-    // spaceListSection.appendChild(list);
   }
+
   (async () => {
     await updateDashboard();
     await updateRequests();
