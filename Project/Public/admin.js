@@ -367,9 +367,9 @@ window.addEventListener("DOMContentLoaded", () => {
     await updateRequests();
     await updateSpaceList();
 
-    setInterval(() => { //Refreshes the page data every so often
-      updateDashboard();
-      updateSpaceList();
+    setInterval(async () => { //Refreshes the page data every so often
+      await updateDashboard();
+      await updateSpaceList();
     }, 15* 1000);
   })();
 });
