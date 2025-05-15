@@ -97,6 +97,14 @@ window.addEventListener("DOMContentLoaded", () => {
   form.onsubmit = async (e) => {
     e.preventDefault();
 
+    const password = passInput.value.trim();
+
+    const passwordValid = password.length >= 8 && /\d/.test(password);
+      if (!passwordValid) {
+        alert("Password must be at least 8 characters long and include at least one number.");
+        return;
+      }
+
     const newUser = {
       username: nameInput.value.trim(), 
       passkey: passInput.value.trim(),
