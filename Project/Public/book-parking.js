@@ -176,6 +176,13 @@ window.addEventListener("DOMContentLoaded", () => {
     const selectedIndex = carParkSelect.value;
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
+    const now = new Date();
+    const start = new Date(startDate);
+    
+    if (start < now) {
+      alert("Start time must be in the future.");
+      return;
+    }
   
     if (!selectedIndex || !startDate || !endDate) {
       alert("Please fill in all fields.");
