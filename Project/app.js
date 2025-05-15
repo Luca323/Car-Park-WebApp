@@ -159,7 +159,7 @@ function checkIPBlock(req, res, next) {
   if (blockedIPs[clientIP]) {
     const currentTime = Date.now();
     if (currentTime < blockedIPs[clientIP]) {
-      const remainingTimeSeconds = Math.ceil((blockedIPs[clientIP] - currentTime) / (15 * 1000));
+      const remainingTimeSeconds = Math.ceil((blockedIPs[clientIP] - currentTime) / 1000);
       return res.status(429).json({ 
         error: `Too many login attempts. Please try again after ${remainingTimeSeconds} seconds.`
       });
