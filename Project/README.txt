@@ -1,5 +1,5 @@
 Before Running our project some key setup steps need to be done.
-ParkEase is a parking management system that allows drivers to book parking spaces in advance, and enables administrators to approve/reject parking requests, manage car parks, monitor space occupancy, schedule events, and send notifications. The system supports real-time tracking of parking sessions and automates transitions such as space reservation, occupancy, and release.
+ParkEase is a parking management system that allows drivers to book parking spaces in advance, and enables administrators to approve/reject parking requests, manage car parks, monitor space occupancy, schedule events, and send notifications. The system supports real-time tracking of parking sessions.
 
 How to Run:
 1. Import the SQL file (Parkease database SQL.txt) into your MySQL server
